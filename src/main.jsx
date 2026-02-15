@@ -1,17 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
-import App from "./App.jsx";
-// import Home from "./index.jsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Auth from "./components/Auth.jsx";
-import Dashboard from "./components/Dashboard.jsx";
-import CreateResume from "./components/CreateResume.jsx";
 import Home from "./index.jsx";
-import path from "path";
-import { AuthProvider } from "./components/AuthContext.jsx";
+import Auth from "./components/auth/Auth.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import CreateResume from "./pages/CreateResume.jsx";
+import { AuthProvider } from "./context/AuthContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import { useState, useEffect } from "react";
+import "./index.css";
 // import { ResumeInfoProvider } from "./context/ResumeInfoContext.jsx";
 
 

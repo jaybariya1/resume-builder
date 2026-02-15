@@ -1,15 +1,15 @@
 import React, { use } from "react";
 import { useContext } from "react";
 import { ResumeInfoContext } from "../context/ResumeInfoContext";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Plus, X, Trash, GraduationCap } from "lucide-react";
-import RichTextEditor from "./TextEditor";
+import RichTextEditor from "../../TextEditor";
 import { Sparkles } from "lucide-react";
 import { useEffect } from "react";
-import { generateContent } from "../components/aiGenerator";
+import { generateContent } from "../../aiGenerator";
 
 
 const EducationStep = () => {

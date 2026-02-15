@@ -1,13 +1,10 @@
 import React, { use, useEffect } from "react";
 import { useContext } from "react";
 import { ResumeInfoContext } from "../context/ResumeInfoContext";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
-import RichTextEditor from "./TextEditor";
-
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Plus, X, Sparkles, Trash, Wand2, Briefcase } from "lucide-react";
 
 const ExperienceStep = () => {

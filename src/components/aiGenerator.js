@@ -1,6 +1,5 @@
 import { supabase } from "../lib/supabaseClient";
-import { ResumeInfoContext } from "../context/ResumeInfoContext";
-import { useContext } from "react";
+
 
 // export async function generateContent({ type, input, context }) {
 //   // type: "summary" | "experience" | "project" | ...

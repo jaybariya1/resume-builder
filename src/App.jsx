@@ -1,15 +1,5 @@
-import { useState, useEffect } from "react";
-import Header from "./components/Header";
-import Hero from "./components/Hero";
-import Features from "./components/Features";
-import HowItWorks from "./components/HowItWorks";
-// import Stats from "./components/Stats";
-import CTA from "./components/CTA";
-import Footer from "./components/Footer";
-import CreateResume from "./components/CreateResume";
-import Dashboard from "./components/Dashboard";
-import Auth from "./components/Auth";
 import { Outlet } from "react-router-dom";
+// import "./App.css";
 
 // import { useUser } from "./hooks/useUser";
 

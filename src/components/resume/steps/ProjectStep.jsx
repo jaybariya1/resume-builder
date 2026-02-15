@@ -1,13 +1,14 @@
-import React, { use } from 'react'
+import React, { use } from "react";
 import { useContext } from "react";
 import { ResumeInfoContext } from "../context/ResumeInfoContext";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Plus, X, Sparkles, Trash, Briefcase } from "lucide-react";
-import RichTextEditor from "./TextEditor";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { Plus, X, Sparkles, Trash, Wand2, Briefcase } from "lucide-react";
+import RichTextEditor from "../../TextEditor";
 import { useEffect } from "react";
+
 
 
 const ProjectStep = () => {

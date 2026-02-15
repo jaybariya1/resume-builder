@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Separator } from "./ui/separator";
+import { Button } from "../ui/button.jsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.jsx";
+import { Input } from "../ui/input.jsx";
+import { Label } from "../ui/label.jsx";
+import { Separator } from "../ui/separator.jsx";
 import {
   User,
   Mail,
@@ -17,7 +17,7 @@ import {
   FileText,
   Brain,
 } from "lucide-react";
-import { supabase } from "../lib/supabaseClient.js";
+import { supabase } from "../../lib/supabaseClient.js";
 import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
@@ -228,7 +228,7 @@ export default function Auth() {
     try {
       const { createClient } = await import("@supabase/supabase-js");
       const { projectId, publicAnonKey } = await import(
-        "../utils/supabase/info"
+        "../../utils/supabase/info.js"
       );
 
       const supabase = createClient(

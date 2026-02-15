@@ -1,6 +1,6 @@
 import React from 'react';
 import { useContext } from 'react';
-import { ResumeInfoContext } from '../../context/ResumeInfoContext';
+import { ResumeInfoContext } from '../../../context/ResumeInfoContext';
 import { Linkedin, Github, Globe, Mail, Phone, MapPin, GraduationCap } from 'lucide-react';
 import { Briefcase } from 'lucide-react';
 import { FolderGit2 } from 'lucide-react';

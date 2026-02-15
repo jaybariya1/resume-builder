@@ -1,21 +1,10 @@
-import React, { use, useEffect } from "react";
+import React, { use } from "react";
 import { useContext } from "react";
 import { ResumeInfoContext } from "../context/ResumeInfoContext";
-// import { generateText } from "../lib/aiService";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
-import { Textarea } from "./ui/textarea";
-import { useState } from "react";
-import { cn } from "../lib/utils";
-import { supabase } from "../lib/supabaseClient";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 
 // import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {

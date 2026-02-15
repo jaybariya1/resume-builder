@@ -1,4 +1,4 @@
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { Menu, X, User, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { 
@@ -8,7 +8,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+} from "../ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 
 export default function Header() {

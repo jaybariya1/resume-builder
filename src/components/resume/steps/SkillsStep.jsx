@@ -1,14 +1,10 @@
-import React from "react";
-import { useContext, useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { ResumeInfoContext } from "../context/ResumeInfoContext";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Badge } from "./ui/badge";
-import { Brain, Plus, X } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Trash } from "lucide-react";
-import { useEffect } from "react";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { Trash, Plus } from "lucide-react";
 
 const levels = ["Beginner", "Intermediate", "Advanced", "Expert"];
 // const SkillsStep = () => {

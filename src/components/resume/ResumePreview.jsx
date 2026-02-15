@@ -1,8 +1,8 @@
 import React, { forwardRef } from "react";
 import { useState } from 'react';
-import { TEMPLATES } from '../components/templates';
+import { TEMPLATES } from '../templates';
 import { useContext } from "react";
-import { ResumeInfoContext } from "../context/ResumeInfoContext";
+import { ResumeInfoContext } from "./context/ResumeInfoContext";
 import { Linkedin, Github, Palette, Globe } from "lucide-react";
 
 const ResumePreview = ()=> {

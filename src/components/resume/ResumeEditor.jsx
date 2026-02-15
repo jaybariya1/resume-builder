@@ -1,71 +1,26 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
-import { Label } from "./ui/label";
-import { Badge } from "./ui/badge";
-import { supabase } from "../lib/supabaseClient";
-import {
-  ResumeInfoContext,
-  ResumeInfoProvider,
-} from "../context/ResumeInfoContext";
-import { Progress } from "./ui/progress";
+import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ResumeInfoContext } from "./context/ResumeInfoContext";
+import { TEMPLATES } from "../templates";
 import ResumePreview from "./ResumePreview";
-import PersonalInfoStep from "./PersonalInfoStep";
-import ExperienceStep from "./ExperienceStep";
-import EducationStep from "./EducationStep";
-import SkillsStep from "./SkillsStep";
-import { TEMPLATES } from "../components/templates";
-import SummaryStep from "./SummaryStep";
-import AdditionalStep from "./AdditionalStep";
-import ProjectStep from "./ProjectStep";
-import { useReactToPrint } from "react-to-print";
+import PersonalInfoStep from "./steps/PersonalInfoStep";
+import SummaryStep from "./steps/SummaryStep";
+import ExperienceStep from "./steps/ExperienceStep";
+import EducationStep from "./steps/EducationStep";
+import SkillsStep from "./steps/SkillsStep";
+import ProjectStep from "./steps/ProjectStep";
+import AdditionalStep from "./steps/AdditionalStep";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { LayoutDashboard, Briefcase, GraduationCap, Home, Download, Eye, User, Award, Plus } from "lucide-react";
+import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas-pro";
-import GeneratingOverlay from "./GeneratingOverlay";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
-import { useRef } from "react";
-import debounce from 'lodash/debounce';
-import isEqual from 'lodash/isEqual';
-import { useCallback } from "react";
+import { supabase } from "../../lib/supabaseClient";
+import { debounce, isEqual } from "lodash";
+import GeneratingOverlay from "../GeneratingOverlay";
+import { FileText } from "lucide-react";
 
-// import { ResumeInfoProvider } from "../context/ResumeInfoContext";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
-import {
-  User,
-  Briefcase,
-  GraduationCap,
-  Award,
-  Brain,
-  Grid,
-  Download,
-  Eye,
-  Plus,
-  X,
-  LayoutDashboard,
-  Sparkles,
-  FileText,
-  ArrowLeft,
-  Home,
-  Github,
-  Linkedin,
-  Globe,
-  Code,
-  Palette,
-  PenTool,
-  BarChart3,
-  Megaphone,
-  FolderGit2,
-} from "lucide-react";
-import { set } from "lodash";
+
 
 export default function ResumeEditor({ mode}) {
   const [currentStep, setCurrentStep] = useState(0);

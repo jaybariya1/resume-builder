@@ -1,10 +1,10 @@
-import React from "react";
-import RichTextEditor from "./TextEditor";
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { ResumeInfoContext } from "../context/ResumeInfoContext";
-import { Button } from "./ui/button";
+import { Button } from "../../ui/button";
+import RichTextEditor from "../../TextEditor";
 import { Sparkles } from "lucide-react";
-import { generateContent } from "../components/aiGenerator";
+import { generateContent } from "../../aiGenerator";
+
 // import { content } from "html2canvas/dist/types/css/property-descriptors/content";
 
 // import { generateText } from '../lib/aiService';
