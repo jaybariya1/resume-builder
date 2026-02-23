@@ -98,7 +98,9 @@ export async function generateContent({ type, input}) {
     // const { data, error } = await supabase.functions.invoke(
     //   "open-generate-text",
     //   {
-    //    body: { prompt: g_prompt }, // must match server expectation
+    //    body: { prompt: userPrompt,
+    //       systemPrompt,
+    //     }, // must match server expectation
     //   }
     // );
 

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { ResumeInfoContext } from "./resume/context/ResumeInfoContext";
+import { ResumeInfoContext } from "../../context/ResumeInfoContext";
 
 export default function GeneratingOverlay() {
   const { isGenerating } = useContext(ResumeInfoContext);

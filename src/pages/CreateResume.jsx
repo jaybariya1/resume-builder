@@ -1,4 +1,4 @@
-import { ResumeInfoProvider } from "../components/resume/context/ResumeInfoContext";
+import { ResumeInfoProvider } from "../context/ResumeInfoContext";
 import ResumeEditor from "../components/resume/ResumeEditor";
 
 export default function CreateResume({ mode }) {

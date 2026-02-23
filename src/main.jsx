@@ -2,11 +2,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./index.jsx";
-import Auth from "./components/auth/Auth.jsx";
+import Auth from "./auth/Auth.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import CreateResume from "./pages/CreateResume.jsx";
-import { AuthProvider } from "./context/AuthContext.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import { AuthProvider } from "./context/authcontext.jsx";
+import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import "./index.css";
 // import { ResumeInfoProvider } from "./context/ResumeInfoContext.jsx";
 

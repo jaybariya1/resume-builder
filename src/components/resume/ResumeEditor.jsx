@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ResumeInfoContext } from "./context/ResumeInfoContext";
-import { TEMPLATES } from "../templates";
+import { ResumeInfoContext } from "../../context/ResumeInfoContext";
+import { TEMPLATES } from "./templates";
 import ResumePreview from "./ResumePreview";
 import PersonalInfoStep from "./steps/PersonalInfoStep";
 import SummaryStep from "./steps/SummaryStep";
@@ -17,7 +17,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { supabase } from "../../lib/supabaseClient";
 import { debounce, isEqual } from "lodash";
-import GeneratingOverlay from "../GeneratingOverlay";
+import GeneratingOverlay from "./GeneratingOverlay";
 import { FileText } from "lucide-react";
 
 
@@ -123,8 +123,7 @@ const saveToDatabase = async (currentData) => {
   try {
     isSaving.current = true;
     let response;
-    console.log("id:", id);
-    console.log("currentData.id:", currentData.id);
+    
     if (id == undefined) {
       response = await saveResume("create", currentData.id ? currentData.id : null, currentData);
     } else {
@@ -135,7 +134,6 @@ const saveToDatabase = async (currentData) => {
     if (response != null) {
       currentData.id = response;
       setResumeData((prev) => ({ ...prev, id: response }));
-      console.log("Setting ID from response:", response, currentData);
     }
     // CRITICAL: Update the reference with the data we JUST saved
     lastSavedVersion.current = JSON.parse(JSON.stringify(currentData));

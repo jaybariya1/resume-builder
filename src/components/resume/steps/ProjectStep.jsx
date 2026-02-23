@@ -1,12 +1,12 @@
 import React, { use } from "react";
 import { useContext } from "react";
-import { ResumeInfoContext } from "../context/ResumeInfoContext";
+import { ResumeInfoContext } from "../../../context/ResumeInfoContext";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Plus, X, Sparkles, Trash, Wand2, Briefcase } from "lucide-react";
-import RichTextEditor from "../../TextEditor";
+import RichTextEditor from "../TextEditor";
 import { useEffect } from "react";
 
 

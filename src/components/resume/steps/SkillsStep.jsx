@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { ResumeInfoContext } from "../context/ResumeInfoContext";
+import { ResumeInfoContext } from "../../../context/ResumeInfoContext";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";

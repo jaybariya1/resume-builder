@@ -5,7 +5,7 @@
 // import { title } from "process";
 import React, { createContext, useState } from "react";
 import { useEffect } from "react";
-import { supabase } from "../../../lib/supabaseClient";
+import { supabase } from "../lib/supabaseClient";
 import { useRef } from "react";
 
 export const ResumeInfoContext = createContext();
@@ -89,7 +89,6 @@ const saveResume = async (mode, resumeId, currentData) => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-      console.log("🔥 Auto-saving resume", mode, resumeId);
   if (!user) return;
 
   const payload = {
