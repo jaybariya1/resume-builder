@@ -18,6 +18,7 @@ import jsPDF from "jspdf";
 import { supabase } from "../../lib/supabaseClient";
 import { debounce, isEqual } from "lodash";
 import GeneratingOverlay from "./GeneratingOverlay";
+import TemplatePicker from "./TemplatePicker";
 import { FileText } from "lucide-react";
 
 
@@ -25,9 +26,10 @@ import { FileText } from "lucide-react";
 export default function ResumeEditor({ mode}) {
   const [currentStep, setCurrentStep] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [value, setValue] = useState();
   const [selectedId, setSelectedId] = useState("modern");
-  const SelectedTemplate = TEMPLATES[selectedId].component;
+  // const SelectedTemplate = TEMPLATES[selectedId].component;
   const navigate = useNavigate();
   const { resumeData, setResumeData, saveResume, loadResumeById } =
     useContext(ResumeInfoContext);
@@ -262,6 +264,12 @@ useEffect(() => {
   return (
     <div>
       <GeneratingOverlay />
+      <TemplatePicker
+        isOpen={showTemplatePicker}
+        onClose={() => setShowTemplatePicker(false)}
+        selectedId={selectedId}
+        onSelect={setSelectedId}
+      />
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 to-red-50 overflow-hidden">
         {/* Navigation Header */}
         <div className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-16">
@@ -274,8 +282,49 @@ useEffect(() => {
                   </span>
                 </div>
               </div>
-              <div className="">
-                <button onClick={downloadPDF}>Download Resume</button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowTemplatePicker(true)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "7px 14px",
+                    borderRadius: "8px",
+                    border: "1.5px solid #fed7aa",
+                    backgroundColor: "white",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "#ea580c",
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#fff7ed"; }}
+                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = "white"; }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+                  </svg>
+                  Templates
+                </button>
+                <button onClick={downloadPDF} style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "7px 14px",
+                  borderRadius: "8px",
+                  background: "linear-gradient(135deg, #f97316, #ef4444)",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "white",
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                  </svg>
+                  Download
+                </button>
               </div>
               <div className="flex items-center gap-4">
                 <Button
@@ -423,7 +472,7 @@ useEffect(() => {
                 </div> */}
                 <div className="bg-white shadow-lg">
                   <div id="resume-preview-id">
-                    <ResumePreview />
+                    <ResumePreview selectedId={selectedId} />
                   </div>
                 </div>
               </div>

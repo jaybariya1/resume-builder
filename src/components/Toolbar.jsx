@@ -87,7 +87,9 @@
 // }
 // export default Toolbar;
 
-function RichTextEditor({ value, onChange }) {
+import React, { useRef } from "react";
+
+export function RichTextEditor({ value, onChange }) {
   const editorRef = useRef(null);
 
   const formatText = (command) => {

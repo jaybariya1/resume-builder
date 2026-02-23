@@ -1,14 +1,10 @@
-import React, { forwardRef } from "react";
-import { useState } from 'react';
+import React from "react";
 import { TEMPLATES } from './templates';
 import { useContext } from "react";
 import { ResumeInfoContext } from "../../context/ResumeInfoContext";
-import { Linkedin, Github, Palette, Globe } from "lucide-react";
 
-const ResumePreview = ()=> {
+const ResumePreview = ({ selectedId = "modern" }) => {
   const { resumeData } = useContext(ResumeInfoContext);
-  const [selectedId] = useState("modern");
-
   const SelectedTemplate = TEMPLATES[selectedId]?.component;
 
   if (!SelectedTemplate) {
@@ -16,7 +12,7 @@ const ResumePreview = ()=> {
   }
 
   return (
-    <div >
+    <div className="w-full h-full p-5 flex items-center justify-center bg-gray-100">
       <SelectedTemplate data={resumeData} />
     </div>
   );

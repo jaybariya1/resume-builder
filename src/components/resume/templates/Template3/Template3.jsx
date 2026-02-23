@@ -1,91 +1,185 @@
-import React from 'react';
-import { useContext } from 'react';
-import { ResumeInfoContext } from '../../../../context/ResumeInfoContext';
-import { Linkedin, Github, Globe, Mail, Phone, MapPin, GraduationCap } from 'lucide-react';
-import { Briefcase } from 'lucide-react';
-import { FolderGit2 } from 'lucide-react';
+import React from "react";
 
-const ResumeTemplate = () => {
-    const { resumeData } = useContext(ResumeInfoContext);
+const Template3 = ({ data }) => {
+  const {
+    firstName,
+    lastName,
+    email,
+    phone,
+    location,
+    summary,
+    role,
+    linkedin,
+    github,
+    portfolio,
+    website,
+    experience = [],
+    education = [],
+    skills = [],
+    project = [],
+  } = data;
+
+  const SectionTitle = ({ children }) => (
+    <h2
+      className="text-[11px] uppercase tracking-[0.2em] font-semibold mt-6 mb-3"
+      style={{ color: "#7c3aed", fontFamily: "Georgia, serif" }}
+    >
+      {children}
+      <div className="mt-1 h-[1.5px]" style={{ backgroundColor: "#7c3aed", opacity: 0.3 }} />
+    </h2>
+  );
+
+  const contactItems = [email, phone, location, linkedin, github, portfolio, website].filter(Boolean);
+
   return (
-    <div className="max-w-[800px] mx-auto bg-white text-black p-8 text-[13px] leading-relaxed font-sans">
+    <main
+      id="resume-preview"
+      className="w-[794px] min-h-[1123px] mx-auto bg-white text-black p-14 text-[12.5px] leading-relaxed"
+      style={{ fontFamily: "Georgia, serif" }}
+    >
+      {/* TOP ACCENT BAR */}
+      <div className="h-1.5 w-full mb-8 rounded-full" style={{ backgroundColor: "#7c3aed" }} />
 
       {/* HEADER */}
-      <header className="mb-4">
-        <h1 className="text-xl font-bold">
-          {resumeData.firstName} {resumeData.lastName}
-          
+      <header className="mb-2">
+        <h1
+          className="text-[32px] font-bold leading-tight"
+          style={{ color: "#1e1b4b", fontFamily: "Georgia, serif", letterSpacing: "-0.5px" }}
+        >
+          {firstName} {lastName}
         </h1>
-
-        <p className="text-gray-600 text-xs mt-1">
-          {resumeData.phone} • {resumeData.email} • {resumeData.location} •{" "}
-          <span className="text-blue-600">{resumeData.linkedin}</span>
-        </p>
+        {role && (
+          <p className="text-[14px] mt-1 font-normal italic" style={{ color: "#7c3aed" }}>
+            {role}
+          </p>
+        )}
+        {contactItems.length > 0 && (
+          <p className="mt-2 text-[11px] text-gray-500">
+            {contactItems.join("  ·  ")}
+          </p>
+        )}
       </header>
 
-      {/* JOB TITLE */}
-      <h2 className="font-semibold mt-4">{resumeData.jobTitle}</h2>
-
       {/* SUMMARY */}
-      <p className="mt-2 text-gray-700">
-        {resumeData.summary}
-      </p>
-
-      {/* SKILLS */}
-      <section className="mt-4">
-        <h3 className="font-bold uppercase text-xs">Skills</h3>
-        <p className="mt-1 text-gray-700">
-          {resumeData.skills.join(", ")}
-        </p>
-      </section>
+      {summary && (
+        <>
+          <SectionTitle>Profile</SectionTitle>
+          <div
+            className="text-gray-700 preview leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: summary }}
+          />
+        </>
+      )}
 
       {/* EXPERIENCE */}
-      <section className="mt-5">
-        <h3 className="font-bold uppercase text-xs">Experience</h3>
-
-        {resumeData.experience.map((exp, i) => (
-          <div key={i} className="mt-3">
-            <p className="font-semibold">
-              {exp.company} • {exp.duration} 
-            </p>
-
-            <p className="italic text-gray-700">{exp.role}</p>
-
-            <ul className="list-disc ml-5 mt-1 space-y-1">
-              {exp.points.map((point, idx) => (
-                <li key={idx}>{point}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </section>
-
-      {/* PROJECTS */}
-      <section className="mt-5">
-        <h3 className="font-bold uppercase text-xs">Projects</h3>
-
-        {data.projects.map((project, i) => (
-          <div key={i} className="mt-2">
-            <p className="font-semibold">{project.title}</p>
-            <ul className="list-disc ml-5">
-              {project.points.map((p, idx) => (
-                <li key={idx}>{p}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </section>
+      {experience.filter((e) => e.title || e.company).length > 0 && (
+        <>
+          <SectionTitle>Experience</SectionTitle>
+          {experience.map((exp) => {
+            if (!exp.title && !exp.company) return null;
+            return (
+              <div key={exp.id} className="mb-5">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-bold text-[13.5px]" style={{ color: "#1e1b4b" }}>
+                      {exp.title}
+                    </p>
+                    <p className="text-[12px] italic text-gray-600">
+                      {exp.company}
+                      {exp.location ? `, ${exp.location}` : ""}
+                    </p>
+                  </div>
+                  <span className="text-[10.5px] text-gray-400 whitespace-nowrap ml-4 mt-0.5">
+                    {exp.startDate}{exp.startDate && " — "}{exp.current ? "Present" : exp.endDate}
+                  </span>
+                </div>
+                {exp.description && (
+                  <div
+                    className="preview mt-2 text-gray-700 text-[12px]"
+                    dangerouslySetInnerHTML={{ __html: exp.description }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
 
       {/* EDUCATION */}
-      <section className="mt-5">
-        <h3 className="font-bold uppercase text-xs">Education</h3>
-        <p className="font-semibold">{data.degree}</p>
-        <p className="text-gray-700">
-          {data.university} • {data.educationDuration}
-        </p>
-      </section>
-    </div>
-  );
-}
+      {education.filter((e) => e.degree || e.school).length > 0 && (
+        <>
+          <SectionTitle>Education</SectionTitle>
+          {education.map((edu) => {
+            if (!edu.degree && !edu.school) return null;
+            return (
+              <div key={edu.id} className="mb-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-bold text-[13px]" style={{ color: "#1e1b4b" }}>
+                      {edu.degree}
+                    </p>
+                    <p className="text-[12px] italic text-gray-600">
+                      {edu.school}
+                      {edu.location ? `, ${edu.location}` : ""}
+                    </p>
+                  </div>
+                  {edu.graduationDate && (
+                    <span className="text-[10.5px] text-gray-400 ml-4 mt-0.5">
+                      {edu.graduationDate}
+                    </span>
+                  )}
+                </div>
+                {edu.description && (
+                  <div
+                    className="preview mt-1 text-gray-700 text-[12px]"
+                    dangerouslySetInnerHTML={{ __html: edu.description }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
 
-export default ResumeTemplate;
+      {/* PROJECTS */}
+      {project.filter((p) => p.title).length > 0 && (
+        <>
+          <SectionTitle>Projects</SectionTitle>
+          {project.map((proj) => {
+            if (!proj.title) return null;
+            return (
+              <div key={proj.id} className="mb-4">
+                <p className="font-bold text-[13px]" style={{ color: "#1e1b4b" }}>
+                  {proj.title}
+                  {proj.url && (
+                    <span className="text-[10px] font-normal italic ml-2 text-gray-500">
+                      {proj.url}
+                    </span>
+                  )}
+                </p>
+                {proj.description && (
+                  <div
+                    className="preview mt-1 text-gray-700 text-[12px]"
+                    dangerouslySetInnerHTML={{ __html: proj.description }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {/* SKILLS */}
+      {skills.filter((s) => s.name).length > 0 && (
+        <>
+          <SectionTitle>Skills</SectionTitle>
+          <p className="text-gray-700">
+            {skills.filter((s) => s.name).map((s) => s.name).join("  ·  ")}
+          </p>
+        </>
+      )}
+    </main>
+  );
+};
+
+export default Template3;
