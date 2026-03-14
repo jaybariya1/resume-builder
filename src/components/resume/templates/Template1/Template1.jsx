@@ -1,218 +1,243 @@
-import React, { useContext } from "react";
+import React from "react";
+import { Phone, Mail, MapPin } from "lucide-react";
 
 const Template1 = ({ data }) => {
-  // const { resumeData } = useContext(ResumeInfoContext);
-    const {
-    firstName,
-    lastName,
-    email,
-    phone,
-    location,
-    summary,
-    role,
-    linkedin,
-    github,
-    portfolio,
-    website,
+  const {
+    firstName = "",
+    lastName = "",
+    email = "",
+    phone = "",
+    location = "",
+    city = "",
+    country = "",
+    summary = "",
+    role = "",
+    linkedin = "",
+    github = "",
+    portfolio = "",
     experience = [],
     education = [],
     skills = [],
     project = [],
     hideSkillLevel = false,
   } = data;
-  const hasHeaderInfo =
-    firstName || lastName || email || phone || location;
+
+  const fullLocation = location || [city, country].filter(Boolean).join(", ");
+  const hasContact = phone || email || fullLocation || linkedin || github || portfolio;
+  const hasName = firstName || lastName;
+
+  // Deduplicate skills by name
+  const uniqueSkills = skills.filter((s, i, arr) =>
+    s.name && arr.findIndex(x => x.name === s.name) === i
+  );
 
   return (
-
-
     <main
       id="resume-preview"
-      className="w-[794px] min-h-[1123px] mx-auto bg-white text-black p-16 text-[13px] leading-relaxed"
+      className="w-[794px] min-h-[1123px] mx-auto bg-white text-black flex flex-col"
+      style={{ fontFamily: "'Arial', 'Helvetica Neue', sans-serif" }}
     >
+      {/* ── HEADER ──────────────────────────────────────────── */}
+      <header className="px-18 pt-12 pb-0 text-center">
+        {hasName && (
+          <h1 className="text-[38px] font-black tracking-[0.14em] uppercase text-black leading-none mb-1.5">
+            {firstName} {lastName}
+          </h1>
+        )}
+        {role && (
+          <p className="text-[12.5px] font-normal tracking-[0.06em] text-black mb-5">
+            {role}
+          </p>
+        )}
 
-      {/* ================= HEADER ================= */}
-      {hasHeaderInfo && (
-        <header className="mb-4">
-          {(firstName || lastName) && (
-            <h1 className="text-[30px] font-bold">
-              {firstName} {lastName}
-            </h1>
-          )}
+        {/* Top divider */}
+        <div className="border-t border-black mb-4" />
 
+        {/* Contact row */}
+        {hasContact && (
+          <div className="flex items-center justify-center gap-8 text-[11px] text-black mb-4">
+            {phone && (
+              <span className="flex items-center gap-1.5">
+                <Phone size={10} strokeWidth={2.5} />
+                {phone}
+              </span>
+            )}
+            {email && (
+              <span className="flex items-center gap-1.5">
+                <Mail size={10} strokeWidth={2.5} />
+                {email}
+              </span>
+            )}
+            {fullLocation && (
+              <span className="flex items-center gap-1.5">
+                <MapPin size={10} strokeWidth={2.5} />
+                {fullLocation}
+              </span>
+            )}
+            {linkedin && (
+              <span className="flex items-center gap-1.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+                {linkedin}
+              </span>
+            )}
+            {github && (
+              <span className="flex items-center gap-1.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+                {github}
+              </span>
+            )}
+            {portfolio && (
+              <span className="flex items-center gap-1.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+                {portfolio}
+              </span>
+            )}
+          </div>
+        )}
 
-          {(email || phone || location || linkedin || github || portfolio || website) && (
-            <p className="text-gray-600 mb-6 space-x-2">
-              {email && <span>{email}</span>}
-              {phone && <span>• {phone}</span>}
-              {location && <span>• {location}</span>}
-              {linkedin && <span>• {linkedin}</span>}
-              {github && <span>• {github}</span>}
-              {portfolio && <span>• {portfolio}</span>}
-              {website && <span>• {website}</span>}
-            </p>
-          )}
-          {role && (
-            <p className="font-medium text-gray-800 text-[15px] mt-1">{role}</p>
-          )}
-        </header>
-      )}
+        {/* Bottom divider */}
+        <div className="border-t border-black" />
+      </header>
 
-      {/* ================= SUMMARY ================= */}
-      {summary && (
-        <section className="mb-6">
-          {/* <h2 className="section-title">Summary</h2> */}
-          <p className="mt-2 text-gray-700 preview" dangerouslySetInnerHTML={{ __html: summary }}></p>
-        </section>
-      )}
+      {/* ── BODY ────────────────────────────────────────────── */}
+      <div className="px-18 pt-5 flex-1">
 
-      {/* ================= SKILLS ================= */}
-      {skills.filter(s => s.name).length > 0 && (
-        <section className="mb-6">
-          <h2 className="section-title text-[15px]">SKILLS</h2>
-          <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2">
-            {skills
-              .filter(s => s.name)
-              .map(skill => {
-                const levelLabel = ["Beginner", "Intermediate", "Advanced", "Expert"][skill.level ?? 2];
-                const filled = (skill.level ?? 2) + 1;
+        {/* ── ABOUT ME ── */}
+        {summary && (
+          <section className="mb-5">
+            <SectionTitle>About Me</SectionTitle>
+            <div
+              className="text-[11.5px] leading-[1.7] text-black preview"
+              dangerouslySetInnerHTML={{ __html: summary }}
+            />
+          </section>
+        )}
+
+        {/* ── EDUCATION ── */}
+        {education.filter(e => e.degree || e.school).length > 0 && (
+          <section className="mb-5">
+            <SectionTitle>Education</SectionTitle>
+            <div className="space-y-4">
+              {education.map((edu) => {
+                if (!edu.degree && !edu.school) return null;
                 return (
-                  <div key={skill.id} className="flex flex-col gap-0.5">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-medium">{skill.name}</span>
-                      {!hideSkillLevel && <span className="text-[9px] text-gray-500">{levelLabel}</span>}
-                    </div>
-                    {!hideSkillLevel && (
-                      <div className="flex gap-0.5">
-                        {[0, 1, 2, 3].map(i => (
-                          <div
-                            key={i}
-                            className={`flex-1 h-1.5 rounded-full ${i < filled ? "bg-gray-800" : "bg-gray-200"}`}
-                          />
-                        ))}
-                      </div>
+                  <div key={edu.id}>
+                    <p className="text-[10.5px] text-black/60 mb-0.5 tracking-wide">
+                      {[edu.school, edu.graduationDate || edu.startDate].filter(Boolean).join(" | ")}
+                    </p>
+                    <p className="text-[12px] font-bold text-black">{edu.degree}</p>
+                    {edu.description && (
+                      <div
+                        className="mt-1 text-[11.5px] leading-[1.65] text-black preview"
+                        dangerouslySetInnerHTML={{ __html: edu.description }}
+                      />
                     )}
                   </div>
                 );
               })}
-          </div>
-        </section>
-      )}
+            </div>
+          </section>
+        )}
 
-      {/* ================= EXPERIENCE ================= */}
-      {experience.length > 0 && (
-        <section className="mb-6">
-          <h2 className="section-title text-[15px]">EXPERIENCE</h2>
+        {/* ── WORK EXPERIENCE ── */}
+        {experience.filter(e => e.title || e.company).length > 0 && (
+          <section className="mb-5">
+            <SectionTitle>Work Experience</SectionTitle>
+            <div className="space-y-4">
+              {experience.map((exp) => {
+                if (!exp.title && !exp.company) return null;
+                const dateRange = [
+                  exp.startDate,
+                  exp.startDate && (exp.endDate || exp.current) ? "-" : null,
+                  exp.current ? "Present" : exp.endDate,
+                ].filter(Boolean).join(" ");
+                return (
+                  <div key={exp.id}>
+                    <p className="text-[10.5px] text-black/60 mb-0.5 tracking-wide">
+                      {[exp.company, dateRange].filter(Boolean).join(" | ")}
+                    </p>
+                    <p className="text-[12px] font-bold text-black">{exp.title}</p>
+                    {exp.description && (
+                      <div
+                        className="mt-1 text-[11.5px] leading-[1.65] text-black preview"
+                        dangerouslySetInnerHTML={{ __html: exp.description }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
-          {experience.map(exp => {
-            if (!exp.title && !exp.company) return null;
+        {/* ── PROJECTS ── */}
+        {project.filter(p => p.title).length > 0 && (
+          <section className="mb-5">
+            <SectionTitle>Projects</SectionTitle>
+            <div className="space-y-4">
+              {project.map((proj) => {
+                if (!proj.title) return null;
+                const dateRange = [
+                  proj.startDate,
+                  proj.startDate && (proj.endDate || proj.current) ? "-" : null,
+                  proj.current ? "Present" : proj.endDate,
+                ].filter(Boolean).join(" ");
+                return (
+                  <div key={proj.id}>
+                    <p className="text-[10.5px] text-black/60 mb-0.5 tracking-wide">
+                      {[proj.organization, dateRange].filter(Boolean).join(" | ")}
+                    </p>
+                    <p className="text-[12px] font-bold text-black">
+                      {proj.title}
+                      {proj.url && (
+                        <span className="text-[10px] font-normal text-black/50 ml-2">{proj.url}</span>
+                      )}
+                    </p>
+                    {proj.description && (
+                      <div
+                        className="mt-1 text-[11.5px] leading-[1.65] text-black preview"
+                        dangerouslySetInnerHTML={{ __html: proj.description }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
-            return (
-              <div key={exp.id} className="mt-1">
-                <p className="font-semibold text-[15px]">
-                  {exp.title}
-                  {exp.company && ` • ${exp.company}`}
-                </p>
+        {/* ── SKILLS ── */}
+        {uniqueSkills.length > 0 && (
+          <section className="mb-8">
+            <SectionTitle>Skills</SectionTitle>
+            <div className="grid grid-cols-3 gap-x-4 gap-y-1.5">
+              {uniqueSkills.map((skill) => (
+                <div key={skill.id} className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-black flex-shrink-0" />
+                  <span className="text-[11.5px] text-black">{skill.name}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-                <p className="text-xs text-gray-600">
-                  {exp.location && <span>{exp.location}</span>}
-                  {(exp.startDate || exp.endDate) && (
-                    <span>
-                      {" "}
-                      | {exp.startDate} –{" "}
-                      {exp.current ? "Present" : exp.endDate}
-                    </span>
-                  )}
-                </p>
+      </div>
 
-                {exp.description && (
-                  <div
-                    className="mt-2 text-gray-700 preview"
-                    dangerouslySetInnerHTML={{ __html: exp.description }}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </section>
-      )}
-
-      {/* ================= PROJECTS ================= */}
-      {project.length > 0 && (
-        <section className="mb-6">
-          <h2 className="section-title text-[15px]">PROJECTS</h2>
-
-          {project.map(proj => {
-            if (!proj.title) return null;
-
-            return (
-              <div key={proj.id} className="mt-1">
-                <p className="font-semibold text-[15px]">
-                  {proj.title}
-                  {proj.url && (
-                    <span className="text-xs text-blue-600 ml-2">
-                      {proj.url}
-                    </span>
-                  )}
-                </p>
-
-                <p className="text-xs text-gray-600">
-                  {proj.organization && <span>{proj.organization}</span>}
-                  {(proj.starDate || proj.endDate) && (
-                    <span>
-                      {" "}
-                      | {proj.starDate} –{" "}
-                      {proj.current ? "Present" : proj.endDate}
-                    </span>
-                  )}
-                </p>
-
-                {proj.description && (
-                  <div
-                    className="preview mt-2 text-gray-700"
-                    dangerouslySetInnerHTML={{ __html: proj.description }}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </section>
-      )}
-
-      {/* ================= EDUCATION ================= */}
-      {education.length > 0 && (
-        <section>
-          <h2 className="section-title text-[15px]">EDUCATION</h2>
-
-          {education.map(edu => {
-            if (!edu.degree && !edu.school) return null;
-
-            return (
-              <div key={edu.id} className="mt-1">
-                <p className="font-semibold text-[15px]">
-                  {edu.degree}
-                  {edu.school && ` • ${edu.school}`}
-                </p>
-
-                <p className="text-xs text-gray-600">
-                  {edu.location && <span>{edu.location}</span>}
-                  {edu.graduationDate && (
-                    <span> | {edu.graduationDate}</span>
-                  )}
-                </p>
-                {edu.description && (
-                  <div
-                    className="preview mt-2 text-gray-700"
-                    dangerouslySetInnerHTML={{ __html: edu.description }}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </section>
-      )}
+      {/* ── DARK FOOTER BAR ─────────────────────────────────── */}
+      <footer className="h-7 bg-[#1c1c1c] mt-auto" />
     </main>
   );
 };
+
+function SectionTitle({ children }) {
+  return (
+    <div className="mb-3">
+      <h2 className="text-[12.5px] font-black tracking-[0.12em] uppercase text-black mb-1.5">
+        {children}
+      </h2>
+      <div className="border-t border-black" />
+    </div>
+  );
+}
 
 export default Template1;

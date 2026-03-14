@@ -1,43 +1,35 @@
 import React, { useState } from "react";
 import {
   User, Mail, Lock, Eye, EyeOff, ArrowLeft,
-  Github, Chrome, Sparkles, FileText, Zap,
-  CheckCircle, ArrowRight,
+  Github, Chrome, Sparkles, Zap,
+  ArrowRight, ShieldCheck,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { useNavigate } from "react-router-dom";
 
-const FEATURES = [
-  { icon: Sparkles,     text: "AI writes your bullets in seconds" },
-  { icon: FileText,     text: "5 professional templates included" },
-  { icon: Zap,          text: "ATS-optimized formatting built-in" },
-  { icon: CheckCircle,  text: "Download as pixel-perfect PDF" },
-];
-
-function ResumePreviewCard() {
+function PasswordStrength({ password }) {
+  const score = [
+    password.length >= 8,
+    /[A-Z]/.test(password),
+    /[0-9]/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ].filter(Boolean).length;
+  const labels = ["", "Weak", "Fair", "Good", "Strong"];
+  const colors = ["", "#ef4444", "#f59e0b", "#3b82f6", "#22c55e"];
+  if (!password) return null;
   return (
-    <div className="relative w-52 bg-white rounded-2xl shadow-2xl p-4 text-left flex-shrink-0">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">JD</div>
-        <div>
-          <div className="h-2 w-20 bg-gray-800 rounded-full" />
-          <div className="h-1.5 w-14 bg-orange-400 rounded-full mt-1" />
-        </div>
+    <div style={{ marginTop: 8 }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 4 }}>
+        {[0,1,2,3].map(i => (
+          <div key={i} style={{
+            height: 3, flex: 1, borderRadius: 99, transition: "background 0.3s",
+            background: i < score ? colors[score] : "#e5e7eb",
+          }} />
+        ))}
       </div>
-      <div className="space-y-1.5">
-        <div className="h-1.5 w-full bg-gray-200 rounded-full" />
-        <div className="h-1.5 w-4/5 bg-gray-200 rounded-full" />
-        <div className="h-1.5 w-3/4 bg-gray-200 rounded-full" />
-      </div>
-      <div className="mt-3 pt-2 border-t border-gray-100 space-y-1">
-        <div className="h-1.5 w-1/3 bg-orange-300 rounded-full" />
-        <div className="h-1.5 w-full bg-gray-100 rounded-full" />
-        <div className="h-1.5 w-5/6 bg-gray-100 rounded-full" />
-        <div className="h-1.5 w-4/5 bg-gray-100 rounded-full" />
-      </div>
-      <div className="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
-        <Sparkles className="w-2.5 h-2.5" /> AI
-      </div>
+      <p style={{ fontSize: 11.5, fontWeight: 600, color: colors[score] || "#9ca3af", margin: 0 }}>
+        {labels[score] || "Too short"}
+      </p>
     </div>
   );
 }
@@ -46,17 +38,18 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState({});
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const navigate = useNavigate();
 
-  const updateFormData = (field, value) => {
+  const update = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: "" }));
   };
 
-  const validateForm = () => {
+  const validate = () => {
     const e = {};
     if (!formData.email) e.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = "Enter a valid email";
@@ -73,41 +66,33 @@ export default function Auth() {
 
   const handleSubmit = async (evt) => {
     evt.preventDefault();
-    if (!validateForm()) return;
+    if (!validate()) return;
     setIsLoading(true);
     try {
       let data, error;
       if (isSignUp) {
         ({ data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
+          email: formData.email, password: formData.password,
           options: { data: { name: formData.name } },
         }));
       } else {
         ({ data, error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
+          email: formData.email, password: formData.password,
         }));
       }
       if (error) throw error;
-      if (isSignUp) {
-        data.session ? navigate("/dashboard") : setSignUpSuccess(true);
-      } else {
-        if (data.session) navigate("/dashboard");
-      }
+      if (isSignUp) { data.session ? navigate("/dashboard") : setSignUpSuccess(true); }
+      else { if (data.session) navigate("/dashboard"); }
     } catch (err) {
       setErrors({ general: err.message || "Something went wrong." });
-    } finally {
-      setIsLoading(false);
-    }
+    } finally { setIsLoading(false); }
   };
 
   const handleSocialAuth = async (provider) => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: `${window.location.origin}/dashboard` },
+        provider, options: { redirectTo: `${window.location.origin}/dashboard` },
       });
       if (error) throw error;
     } catch (err) {
@@ -122,24 +107,24 @@ export default function Auth() {
     setErrors({});
   };
 
+  const inputCls = (hasErr) => `auth-input${hasErr ? " auth-input-err" : ""}`;
+
+  /* ── Success ── */
   if (signUpSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center border border-orange-100">
-          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <Sparkles className="w-9 h-9 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-foreground mb-3">Check your inbox!</h2>
-          <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+      <div className="auth-page">
+        <style>{CSS}</style>
+        <div className="auth-success-card auth-card-enter">
+          <div className="auth-success-icon"><Sparkles size={28} color="#fff" /></div>
+          <span className="auth-success-badge">Account created ✓</span>
+          <h2 className="auth-success-title">Check your inbox!</h2>
+          <p className="auth-success-body">
             We sent a confirmation link to{" "}
-            <span className="font-semibold text-orange-600">{formData.email}</span>.
+            <strong style={{ color: "#f97316" }}>{formData.email}</strong>.
             Click it to activate your account.
           </p>
-          <button
-            onClick={() => { setSignUpSuccess(false); setIsSignUp(false); }}
-            className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all"
-          >
-            Back to Sign In <ArrowRight className="w-4 h-4" />
+          <button onClick={() => { setSignUpSuccess(false); setIsSignUp(false); }} className="auth-primary-btn">
+            Back to Sign In <ArrowRight size={16} />
           </button>
         </div>
       </div>
@@ -147,281 +132,272 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="auth-page">
+      <style>{CSS}</style>
 
-      {/* LEFT PANEL */}
-      <div
-        className="hidden lg:flex lg:w-[48%] relative flex-col justify-between p-12 overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #1c0f0a 0%, #3b1207 40%, #7c2d12 100%)" }}
-      >
-        {/* Decorative blobs */}
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10 pointer-events-none"
-          style={{ background: "radial-gradient(circle, #f97316, transparent)", transform: "translate(30%, -30%)" }} />
-        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-10 pointer-events-none"
-          style={{ background: "radial-gradient(circle, #fb923c, transparent)", transform: "translate(-30%, 30%)" }} />
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #f97316 1px, transparent 0)", backgroundSize: "32px 32px" }} />
-
-        {/* Logo */}
-        <button onClick={() => navigate("/")} className="flex items-center gap-2.5 group w-fit">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-            <Zap className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-white font-bold text-lg tracking-tight">AI Resume Builder</span>
+      {/* Top bar */}
+      <div className="auth-topbar">
+        <button onClick={() => navigate("/")} className="auth-logo">
+          <div className="auth-logo-icon"><Zap size={16} color="#fff" /></div>
+          <span className="auth-logo-text">ResumeAI</span>
+          <span className="auth-logo-badge">PRO</span>
         </button>
-
-        {/* Headline + features */}
-        <div className="space-y-8">
-          <div>
-            <h1 className="text-4xl font-bold text-white leading-tight mb-4">
-              Land your dream job
-              <span className="block text-orange-400">faster than ever.</span>
-            </h1>
-            <p className="text-orange-200/70 text-sm leading-relaxed max-w-xs">
-              Our AI crafts compelling, ATS-optimized resumes tailored to each role — so recruiters notice you first.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {FEATURES.map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-3.5 h-3.5 text-orange-400" />
-                </div>
-                <span className="text-orange-100/80 text-sm">{text}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Preview card */}
-          <div className="flex items-end gap-4">
-            <ResumePreviewCard />
-            <div className="pb-2 space-y-1">
-              <div className="text-orange-400 text-xs font-semibold uppercase tracking-widest">Live preview</div>
-              <div className="text-orange-100/60 text-xs max-w-[100px] leading-relaxed">Edit and see changes instantly</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Social proof */}
-        <div className="flex items-center gap-3">
-          <div className="flex -space-x-2">
-            {["#f97316","#fb923c","#fdba74","#fcd34d"].map((c, i) => (
-              <div key={i} className="w-7 h-7 rounded-full border-2 border-[#3b1207] flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
-                style={{ background: c }}>
-                {String.fromCharCode(65 + i * 3)}
-              </div>
-            ))}
-          </div>
-          <p className="text-orange-200/60 text-xs">Join thousands building standout resumes</p>
-        </div>
+        <button onClick={() => navigate("/")} className="auth-back-btn">
+          <ArrowLeft size={14} /> Back to home
+        </button>
       </div>
 
-      {/* RIGHT PANEL */}
-      <div className="flex-1 flex flex-col bg-[#fffbf7]">
+      {/* Centered form */}
+      <div className="auth-form-area">
+        <div className="auth-form-card auth-card-enter">
 
-        {/* Mobile top bar */}
-        <div className="lg:hidden flex items-center justify-between px-6 py-4 border-b border-orange-100">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
+          {/* Mode tabs */}
+          <div className="auth-tabs">
+            {["Sign In", "Sign Up"].map((label, idx) => (
+              <button key={label}
+                onClick={() => isSignUp !== (idx === 1) && switchMode()}
+                className={`auth-tab${isSignUp === (idx === 1) ? " auth-tab-active" : ""}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Heading */}
+          <div className="auth-form-heading">
+            <h2 className="auth-form-title">
+              {isSignUp ? "Create your account" : "Welcome back"}
+            </h2>
+            <p className="auth-form-subtitle">
+              {isSignUp ? "Start building AI-powered resumes for free" : "Sign in to continue to your dashboard"}
+            </p>
+          </div>
+
+          {/* Social */}
+          <div className="auth-social-row">
+            {[
+              { provider: "google", label: "Google", icon: Chrome, color: "#ea4335" },
+              { provider: "github", label: "GitHub", icon: Github, color: "#24292e" },
+            ].map(({ provider, label, icon: Icon, color }) => (
+              <button key={provider} onClick={() => handleSocialAuth(provider)}
+                disabled={isLoading} className="auth-social-btn">
+                <Icon size={16} color={color} />
+                <span>Continue with {label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div className="auth-divider">
+            <div className="auth-divider-line" />
+            <span className="auth-divider-text">or use email</span>
+            <div className="auth-divider-line" />
+          </div>
+
+          {/* Error banner */}
+          {errors.general && (
+            <div className="auth-error-banner">
+              <ShieldCheck size={14} /> {errors.general}
             </div>
-            <span className="font-bold text-sm text-foreground">AI Resume Builder</span>
-          </button>
-          <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Home
-          </button>
-        </div>
+          )}
 
-        {/* Form */}
-        <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
-          <div className="w-full max-w-md">
-
-            {/* Desktop back */}
-            <button
-              onClick={() => navigate("/")}
-              className="hidden lg:flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back to home
-            </button>
-
-            {/* Heading */}
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-foreground mb-1.5">
-                {isSignUp ? "Create account" : "Welcome back"}
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                {isSignUp
-                  ? "Start building AI-powered resumes for free"
-                  : "Sign in to continue to your dashboard"}
-              </p>
-            </div>
-
-            {/* Social buttons */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {[
-                { provider: "google", label: "Google", icon: Chrome },
-                { provider: "github", label: "GitHub", icon: Github },
-              ].map(({ provider, label, icon: Icon }) => (
-                <button
-                  key={provider}
-                  onClick={() => handleSocialAuth(provider)}
-                  disabled={isLoading}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-orange-200 bg-white text-sm font-medium text-foreground hover:bg-orange-50 hover:border-orange-300 transition-all disabled:opacity-50 shadow-sm"
-                >
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* Divider */}
-            <div className="relative mb-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-orange-100" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-[#fffbf7] px-3 text-xs text-muted-foreground">or continue with email</span>
-              </div>
-            </div>
-
-            {/* Error */}
-            {errors.general && (
-              <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-600">
-                {errors.general}
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="auth-form">
+            {isSignUp && (
+              <div className="auth-field">
+                <label className="auth-label">Full name</label>
+                <div className="auth-input-wrap">
+                  <User size={15} color={errors.name ? "#ef4444" : "#d97706"} className="auth-input-icon" />
+                  <input type="text" placeholder="Jane Smith" value={formData.name}
+                    onChange={e => update("name", e.target.value)} disabled={isLoading}
+                    className={inputCls(errors.name)} />
+                </div>
+                {errors.name && <p className="auth-field-error">{errors.name}</p>}
               </div>
             )}
 
-            {/* Form fields */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {isSignUp && (
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">Full name</label>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-300 pointer-events-none" />
-                    <input
-                      type="text"
-                      placeholder="Jane Smith"
-                      value={formData.name}
-                      onChange={e => updateFormData("name", e.target.value)}
-                      disabled={isLoading}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-orange-200 bg-white text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
-                    />
-                  </div>
-                  {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Email address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-300 pointer-events-none" />
-                  <input
-                    type="email"
-                    placeholder="jane@example.com"
-                    value={formData.email}
-                    onChange={e => updateFormData("email", e.target.value)}
-                    disabled={isLoading}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-orange-200 bg-white text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
-                  />
-                </div>
-                {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+            <div className="auth-field">
+              <label className="auth-label">Email address</label>
+              <div className="auth-input-wrap">
+                <Mail size={15} color={errors.email ? "#ef4444" : "#d97706"} className="auth-input-icon" />
+                <input type="email" placeholder="jane@example.com" value={formData.email}
+                  onChange={e => update("email", e.target.value)} disabled={isLoading}
+                  className={inputCls(errors.email)} />
               </div>
+              {errors.email && <p className="auth-field-error">{errors.email}</p>}
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-300 pointer-events-none" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder={isSignUp ? "Min. 6 characters" : "Your password"}
-                    value={formData.password}
-                    onChange={e => updateFormData("password", e.target.value)}
-                    disabled={isLoading}
-                    className="w-full pl-10 pr-11 py-2.5 rounded-xl border border-orange-200 bg-white text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-orange-300 hover:text-orange-500 transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            <div className="auth-field">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label className="auth-label">Password</label>
+                {!isSignUp && <button type="button" className="auth-forgot">Forgot password?</button>}
+              </div>
+              <div className="auth-input-wrap">
+                <Lock size={15} color={errors.password ? "#ef4444" : "#d97706"} className="auth-input-icon" />
+                <input type={showPassword ? "text" : "password"}
+                  placeholder={isSignUp ? "Min. 6 characters" : "Your password"}
+                  value={formData.password} onChange={e => update("password", e.target.value)}
+                  disabled={isLoading} className={`${inputCls(errors.password)} auth-input-pr`} />
+                <button type="button" onClick={() => setShowPassword(v => !v)} className="auth-eye-btn">
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+              {isSignUp && <PasswordStrength password={formData.password} />}
+              {errors.password && <p className="auth-field-error">{errors.password}</p>}
+            </div>
+
+            {isSignUp && (
+              <div className="auth-field">
+                <label className="auth-label">Confirm password</label>
+                <div className="auth-input-wrap">
+                  <Lock size={15} color={errors.confirmPassword ? "#ef4444" : "#d97706"} className="auth-input-icon" />
+                  <input type={showConfirmPw ? "text" : "password"} placeholder="Same as above"
+                    value={formData.confirmPassword} onChange={e => update("confirmPassword", e.target.value)}
+                    disabled={isLoading} className={`${inputCls(errors.confirmPassword)} auth-input-pr`} />
+                  <button type="button" onClick={() => setShowConfirmPw(v => !v)} className="auth-eye-btn">
+                    {showConfirmPw ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
-                {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
-              </div>
-
-              {isSignUp && (
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">Confirm password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-300 pointer-events-none" />
-                    <input
-                      type="password"
-                      placeholder="Same as above"
-                      value={formData.confirmPassword}
-                      onChange={e => updateFormData("confirmPassword", e.target.value)}
-                      disabled={isLoading}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-orange-200 bg-white text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
-                    />
-                  </div>
-                  {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold shadow-md hover:shadow-lg hover:from-orange-600 hover:to-red-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed mt-2"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    {isSignUp ? "Creating account…" : "Signing in…"}
-                  </>
-                ) : (
-                  <>
-                    {isSignUp ? "Create account" : "Sign in"}
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Toggle mode */}
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-              <button
-                onClick={switchMode}
-                disabled={isLoading}
-                className="font-semibold text-orange-600 hover:text-orange-700 transition-colors"
-              >
-                {isSignUp ? "Sign in" : "Sign up free"}
-              </button>
-            </p>
-
-            {/* Sign-up perks */}
-            {isSignUp && (
-              <div className="mt-6 pt-5 border-t border-orange-100">
-                <p className="text-xs text-center text-muted-foreground mb-3 font-medium">What you get for free</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { icon: Sparkles, label: "AI Writing" },
-                    { icon: FileText, label: "5 Templates" },
-                    { icon: Zap,      label: "PDF Export" },
-                  ].map(({ icon: Icon, label }) => (
-                    <div key={label} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-orange-50 border border-orange-100">
-                      <Icon className="w-4 h-4 text-orange-500" />
-                      <span className="text-[11px] font-medium text-foreground text-center leading-tight">{label}</span>
-                    </div>
-                  ))}
-                </div>
+                {errors.confirmPassword && <p className="auth-field-error">{errors.confirmPassword}</p>}
               </div>
             )}
 
+            <button type="submit" disabled={isLoading} className="auth-submit-btn">
+              {isLoading ? (
+                <><div className="auth-spinner" />{isSignUp ? "Creating account…" : "Signing in…"}</>
+              ) : (
+                <>{isSignUp ? "Create free account" : "Sign in"}<ArrowRight size={16} /></>
+              )}
+            </button>
+          </form>
+
+          {/* Toggle */}
+          <p className="auth-toggle-text">
+            {isSignUp ? "Already have an account? " : "Don't have an account? "}
+            <button onClick={switchMode} disabled={isLoading} className="auth-toggle-link">
+              {isSignUp ? "Sign in" : "Sign up — it's free"}
+            </button>
+          </p>
+
+          {/* Trust */}
+          <div className="auth-trust">
+            <ShieldCheck size={13} color="#a3a3a3" />
+            <span className="auth-trust-text">256-bit SSL encryption · No credit card required</span>
           </div>
+
         </div>
       </div>
     </div>
   );
 }
+
+/* ──────────────────────── CSS ──────────────────────── */
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes cardEnter { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+
+  .auth-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #fafaf9;
+  }
+
+  .auth-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid #f0ede8;
+    background: #fff;
+  }
+
+  .auth-logo { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 0; }
+  .auth-logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg,#f97316,#dc2626); display:flex; align-items:center; justify-content:center; box-shadow: 0 3px 10px rgba(249,115,22,0.45); transition: transform 0.2s; }
+  .auth-logo:hover .auth-logo-icon { transform: scale(1.05); }
+  .auth-logo-text { color: #1c0a00; font-weight: 800; font-size: 16px; letter-spacing: -0.02em; }
+  .auth-logo-badge { background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3); color: #f97316; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 99px; }
+
+  .auth-back-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; color: #a8a29e; font-size: 13px; font-weight: 500; padding: 0; font-family: inherit; transition: color 0.2s; }
+  .auth-back-btn:hover { color: #292524; }
+
+  .auth-card-enter { animation: cardEnter 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+
+  .auth-form-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+  .auth-form-card { width: 100%; max-width: 420px; display: flex; flex-direction: column; }
+
+  .auth-tabs { display: flex; background: #f0ece7; border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+  .auth-tab { flex: 1; padding: 9px 0; border: none; background: none; border-radius: 9px; font-size: 13.5px; font-weight: 600; color: #a8a29e; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+  .auth-tab-active { background: #fff; color: #1c0a00; box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
+
+  .auth-form-heading { margin-bottom: 24px; }
+  .auth-form-title { font-size: 26px; font-weight: 800; color: #1c0a00; letter-spacing: -0.025em; margin: 0 0 6px; }
+  .auth-form-subtitle { font-size: 13.5px; color: #78716c; margin: 0; }
+
+  .auth-social-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .auth-social-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 11px 16px; background: #fff; border: 1.5px solid #e7e4df; border-radius: 12px; font-size: 13.5px; font-weight: 600; color: #292524; cursor: pointer; transition: all 0.18s; box-shadow: 0 1px 3px rgba(0,0,0,0.04); font-family: inherit; }
+  .auth-social-btn:hover:not(:disabled) { background: #f9f7f5; border-color: #d0cbc4; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.07); }
+  .auth-social-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .auth-divider { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .auth-divider-line { flex: 1; height: 1px; background: #e7e4df; }
+  .auth-divider-text { font-size: 12px; color: #a8a29e; font-weight: 500; white-space: nowrap; }
+
+  .auth-error-banner { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; font-size: 13px; color: #dc2626; font-weight: 500; margin-bottom: 16px; }
+
+  .auth-form { display: flex; flex-direction: column; gap: 16px; }
+  .auth-field { display: flex; flex-direction: column; gap: 6px; }
+  .auth-label { font-size: 13px; font-weight: 600; color: #44403c; display: block; }
+  .auth-input-wrap { position: relative; }
+  .auth-input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; z-index: 1; }
+  .auth-input {
+    width: 100%; padding: 11px 16px 11px 40px;
+    background: #fff; border: 1.5px solid #e7e4df; border-radius: 12px;
+    font-size: 14px; color: #1c0a00; outline: none; font-family: inherit;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  .auth-input:focus { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.12); }
+  .auth-input::placeholder { color: #c4bdb8; }
+  .auth-input:disabled { opacity: 0.6; cursor: not-allowed; background: #f9f7f5; }
+  .auth-input-err { border-color: #fca5a5 !important; background: #fff8f8 !important; }
+  .auth-input-pr { padding-right: 44px; }
+
+  .auth-eye-btn { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #a8a29e; display: flex; align-items: center; padding: 2px; transition: color 0.2s; }
+  .auth-eye-btn:hover { color: #57534e; }
+  .auth-field-error { font-size: 12px; color: #ef4444; margin: 0; font-weight: 500; }
+  .auth-forgot { font-size: 12px; color: #f97316; font-weight: 600; background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
+  .auth-forgot:hover { color: #ea6a0a; }
+
+  .auth-submit-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 20px; width: 100%; margin-top: 4px;
+    background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+    border: none; border-radius: 13px; color: #fff; font-size: 14px; font-weight: 700;
+    cursor: pointer; letter-spacing: -0.01em; font-family: inherit;
+    box-shadow: 0 4px 16px rgba(249,115,22,0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .auth-submit-btn:hover:not(:disabled) { transform: translateY(-1.5px); box-shadow: 0 6px 24px rgba(249,115,22,0.45); }
+  .auth-submit-btn:active:not(:disabled) { transform: translateY(0); }
+  .auth-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .auth-spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+
+  .auth-toggle-text { margin-top: 20px; text-align: center; font-size: 13.5px; color: #78716c; }
+  .auth-toggle-link { background: none; border: none; cursor: pointer; color: #f97316; font-weight: 700; font-size: 13.5px; padding: 0; font-family: inherit; transition: color 0.2s; }
+  .auth-toggle-link:hover { color: #ea6a0a; }
+
+  .auth-trust { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #f0ede8; }
+  .auth-trust-text { font-size: 11.5px; color: #a8a29e; font-weight: 500; }
+
+  /* ── Success ── */
+  .auth-success-card { background: #fff; border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.1); padding: 52px 48px; max-width: 420px; width: 100%; text-align: center; border: 1px solid #f0ede8; }
+  .auth-success-icon { width: 72px; height: 72px; background: linear-gradient(135deg,#f97316,#dc2626); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 8px 24px rgba(249,115,22,0.4); }
+  .auth-success-badge { display: inline-block; background: #dcfce7; color: #16a34a; font-size: 12px; font-weight: 700; padding: 3px 12px; border-radius: 99px; margin-bottom: 12px; letter-spacing: 0.03em; }
+  .auth-success-title { font-size: 26px; font-weight: 800; color: #1c0a00; margin: 0 0 10px; letter-spacing: -0.02em; }
+  .auth-success-body { color: #78716c; font-size: 14px; line-height: 1.7; margin: 0 0 28px; }
+  .auth-primary-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: linear-gradient(135deg,#f97316,#dc2626); border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(249,115,22,0.35); font-family: inherit; margin: 0 auto; transition: transform 0.2s; }
+  .auth-primary-btn:hover { transform: translateY(-1px); }
+`;

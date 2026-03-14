@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ResumeInfoContext } from "../../context/ResumeInfoContext";
+import { useAuth } from "../../context/AuthContext";
 import { TEMPLATES } from "./templates";
 import ResumePreview from "./ResumePreview";
 import PersonalInfoStep from "./steps/PersonalInfoStep";
@@ -12,11 +13,12 @@ import ProjectStep from "./steps/ProjectStep";
 import AdditionalStep from "./steps/AdditionalStep";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { LayoutDashboard, Briefcase, GraduationCap, Home, Download, Eye, User, Award, Plus, FolderGit2, FileText } from "lucide-react";
+import { LayoutDashboard, Download, Eye, User, Award, Plus, FolderGit2, FileText, Briefcase, GraduationCap, LogOut, ChevronDown, Pencil, Monitor, Sliders } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { debounce, isEqual } from "lodash";
 import GeneratingOverlay from "./GeneratingOverlay";
 import TemplatePicker from "./TemplatePicker";
+import CustomizePanel from "./CustomizePanel";
 
 
 
@@ -26,17 +28,50 @@ export default function ResumeEditor({ mode}) {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [value, setValue] = useState();
   const [selectedId, setSelectedId] = useState("modern");
+  const [accentColor, setAccentColor] = useState(null); // null = use template default
+  const [activeView, setActiveView] = useState("edit"); // "edit" | "preview" | "customize"
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const userMenuRef = useRef(null);
+  const titleInputRef = useRef(null);
   const navigate = useNavigate();
   const { resumeData, setResumeData, saveResume, loadResumeById } =
     useContext(ResumeInfoContext);
+  const { user } = useAuth();
   const { id } = useParams();
-  const user = supabase.auth.getUser();
   const saveTimeout = React.useRef(null);
   const lastSaved = React.useRef(null);
   const isDirtyRef = useRef(false);
   const [saveStatus, setSaveStatus] = useState('Saved');
   const isInitialMount = useRef(true);
   const lastSavedVersion = useRef(null);
+
+  // Close user menu on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Focus title input when editing starts
+  useEffect(() => {
+    if (editingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+      titleInputRef.current.select();
+    }
+  }, [editingTitle]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
+  const displayName = user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
+  const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   
 
 
@@ -58,28 +93,6 @@ export default function ResumeEditor({ mode}) {
 
     
     
-    // CREATE MODE → reset
-    if (mode === "create") {
-      setResumeData({
-        id: null,
-        title: "",
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        location: "",
-        summary: "",
-        role: "",
-        linkedin: "",
-        github: "",
-        portfolio: "",
-        website: "",
-        experience: [],
-        education: [],
-        skills: [],
-        project: [],
-      });
-    }
   }, [mode, id]);
 
 const isSaving = useRef(false);
@@ -172,106 +185,88 @@ useEffect(() => {
 
   const downloadPDF = () => {
     const element = document.getElementById("resume-preview");
-    if (!element) {
-      console.error("Resume preview element not found");
-      return;
+    if (!element) return;
+
+    // Inject a one-time print stylesheet into the live document.
+    // This hides everything except the resume and resets all layout
+    // so Tailwind classes render exactly as they do on screen.
+    const styleId = "resume-print-style";
+    let style = document.getElementById(styleId);
+    if (!style) {
+      style = document.createElement("style");
+      style.id = styleId;
+      document.head.appendChild(style);
     }
 
-    // Collect all stylesheets so Tailwind renders identically in the print window
-    const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-      .map((l) => `<link rel="stylesheet" href="${l.href}" />`)
-      .join("\n");
-
-    const inlineStyles = Array.from(document.styleSheets)
-      .map((sheet) => {
-        try {
-          return Array.from(sheet.cssRules).map((r) => r.cssText).join("\n");
-        } catch {
-          return ""; // skip cross-origin sheets (already linked above)
+    style.textContent = `
+      @media print {
+        @page {
+          size: 794px 1123px;
+          margin: 0 !important;
         }
-      })
-      .join("\n");
 
-    const name = (resumeData.firstName || resumeData.lastName)
-      ? `${resumeData.firstName || ""}-${resumeData.lastName || ""}-resume`
-          .replace(/^-|-$/g, "").replace(/--+/g, "-")
-      : "my-resume";
+        /* Hide everything on the page */
+        body > * {
+          display: none !important;
+        }
 
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=794" />
-  <title>${name}</title>
-  ${styleLinks}
-  <style>
-    ${inlineStyles}
+        /* Show only our print container */
+        #resume-print-container {
+          display: block !important;
+          position: fixed !important;
+          inset: 0 !important;
+          z-index: 99999 !important;
+          background: white !important;
+        }
 
-    /* Force colors to print exactly as shown */
-    *, *::before, *::after {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
+        /* The resume main — exact A4 size, no extra margin */
+        #resume-print-container #resume-preview {
+          width: 794px !important;
+          min-height: 1123px !important;
+          margin: 0 !important;
+          box-shadow: none !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
 
-    html {
-      margin: 0;
-      padding: 0;
-      background: white;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      background: white;
-      /* The resume is 794px wide — set the body to match so the browser
-         treats it as one A4-width "page" with no extra whitespace */
-      width: 794px;
-    }
-
-    /* Remove any wrapper padding/bg the preview adds */
-    #resume-preview {
-      margin: 0 !important;
-      box-shadow: none !important;
-    }
-
-    @media print {
-      html, body {
-        margin: 0;
-        padding: 0;
-        width: 794px;
+        /* Tailwind mx-auto adds auto margins — kill them in print */
+        #resume-print-container .mx-auto {
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+        }
       }
+    `;
 
-      /* A4 at 96dpi = 794 x 1123px. margin:0 removes browser header/footer. */
-      @page {
-        size: A4 portrait;
-        margin: 0;
-      }
-
-      #resume-preview {
-        margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-        page-break-inside: avoid;
-      }
+    // Create or reuse a print container div at the body root
+    let container = document.getElementById("resume-print-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "resume-print-container";
+      container.style.display = "none";
+      document.body.appendChild(container);
     }
-  </style>
-</head>
-<body>
-  ${element.outerHTML}
-  <script>
-    // Trigger print once all assets (fonts, images) are loaded
-    window.onload = function () {
-      setTimeout(function () {
-        window.print();
-        window.close();
-      }, 800);
+
+    // Move (not clone) the live resume element into the container so all
+    // computed styles, Tailwind classes and inline styles are fully intact.
+    // We put it back after printing.
+    const parent = element.parentNode;
+    const nextSibling = element.nextSibling;
+    container.appendChild(element);
+
+    const cleanup = () => {
+      // Restore element to original position
+      if (nextSibling) {
+        parent.insertBefore(element, nextSibling);
+      } else {
+        parent.appendChild(element);
+      }
+      style.textContent = "";
     };
-  </script>
-</body>
-</html>`);
 
-    printWindow.document.close();
+    // Use afterprint event to restore — works in all modern browsers
+    window.addEventListener("afterprint", cleanup, { once: true });
+
+    window.print();
   };
 
   const renderStepContent = () => {
@@ -305,108 +300,141 @@ useEffect(() => {
         onSelect={setSelectedId}
       />
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 to-red-50 overflow-hidden">
-        {/* Navigation Header */}
-        <div className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-16">
-          <div className="container mx-auto px-4 h-16 flex items-center">
-            <div className="flex justify-between w-full items-center">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                    AI Resume Builder
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowTemplatePicker(true)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "7px 14px",
-                    borderRadius: "8px",
-                    border: "1.5px solid #fed7aa",
-                    backgroundColor: "white",
-                    cursor: "pointer",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "#ea580c",
-                    transition: "all 0.15s",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#fff7ed"; }}
-                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = "white"; }}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
-                  </svg>
-                  Templates
-                </button>
-                <button onClick={downloadPDF} style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "7px 14px",
-                  borderRadius: "8px",
-                  background: "linear-gradient(135deg, #f97316, #ef4444)",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "white",
-                }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                  </svg>
-                  Download
-                </button>
-              </div>
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleNavigateAway("/dashboard")}
-                  className="gap-2 hover:text-orange-600"
-                >
-                  <LayoutDashboard className="h-4 w-4" />
-                  Dashboard
-                </Button>
-                <div className="h-7 w-0.25 bg-border"></div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleNavigateAway("/")}
-                  className="gap-2 hover:text-orange-600"
-                >
-                  <Home className="h-4 w-4" />
-                  Home
-                </Button>
-              </div>
-              {/* <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">Auto-saved</span>
-              <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-            </div> */}
+
+        {/* ── NEW HEADER ─────────────────────────────────────────────── */}
+        <header className="sticky top-0 z-50 h-14 bg-white border-b border-[#fde3c8] flex items-center px-4 gap-4">
+
+          {/* ── LEFT: Resume title ── */}
+          <div className="flex items-center gap-2 min-w-0 w-[260px] flex-shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center flex-shrink-0">
+              <FileText size={14} className="text-white" />
+            </div>
+            {editingTitle ? (
+              <input
+                ref={titleInputRef}
+                value={resumeData.title || ""}
+                onChange={e => setResumeData(prev => ({ ...prev, title: e.target.value }))}
+                onBlur={() => setEditingTitle(false)}
+                onKeyDown={e => { if (e.key === "Enter" || e.key === "Escape") setEditingTitle(false); }}
+                placeholder="Untitled Resume"
+                className="flex-1 min-w-0 text-sm font-semibold text-foreground bg-[#fff7ed] border border-[#fdba74] rounded-[var(--radius)] px-2 py-1 outline-none focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/20 transition-all"
+              />
+            ) : (
+              <button
+                onClick={() => setEditingTitle(true)}
+                className="flex items-center gap-1.5 group flex-1 min-w-0"
+              >
+                <span className="text-sm font-semibold text-stone-800 truncate">
+                  {resumeData.title || "Untitled Resume"}
+                </span>
+                <Pencil size={12} className="text-stone-400 group-hover:text-orange-500 flex-shrink-0 transition-colors" />
+              </button>
+            )}
+            {/* Save status */}
+            <span className="text-[10px] font-medium text-stone-400 flex-shrink-0 hidden sm:block">
+              {saveStatus === "Saving..." ? "Saving…" : saveStatus === "Saved" ? "✓ Saved" : saveStatus}
+            </span>
+          </div>
+
+          {/* ── CENTER: Edit / Customize / Preview toggle tabs ── */}
+          <div className="flex-1 flex justify-center">
+            <div className="flex bg-[#fff7ed] border border-[#fde3c8] rounded-[var(--radius)] p-1 gap-1">
+              <button
+                onClick={() => setActiveView("edit")}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-150 ${
+                  activeView === "edit"
+                    ? "bg-white text-[#9a3412] shadow-[0_1px_3px_rgba(234,88,12,0.12)]"
+                    : "text-[#78716c] hover:text-[#44403c]"
+                }`}
+              >
+                <Pencil size={13} />
+                Edit
+              </button>
+              <button
+                onClick={() => setActiveView("customize")}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-150 ${
+                  activeView === "customize"
+                    ? "bg-white text-[#9a3412] shadow-[0_1px_3px_rgba(234,88,12,0.12)]"
+                    : "text-[#78716c] hover:text-[#44403c]"
+                }`}
+              >
+                <Sliders size={13} />
+                Customize
+              </button>
+              <button
+                onClick={() => setActiveView("preview")}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-150 ${
+                  activeView === "preview"
+                    ? "bg-white text-[#9a3412] shadow-[0_1px_3px_rgba(234,88,12,0.12)]"
+                    : "text-[#78716c] hover:text-[#44403c]"
+                }`}
+              >
+                <Monitor size={13} />
+                Preview
+              </button>
             </div>
           </div>
-        </div>
 
-        <div className="w-full flex-1 min-h-0 ">
-          {/* <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-4">
-              Create Your Resume
-            </h1>
-            <p className="text-lg text-muted-foreground mb-6">
-              Build a professional resume with AI-powered optimization
-            </p> */}
+          {/* ── RIGHT: Download + User menu ── */}
+          <div className="flex items-center gap-2 w-[260px] flex-shrink-0 justify-end">
 
-          {/* Progress Bar */}
-          {/* <div className="mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-700">Progress</span>
-              <span className="text-sm font-medium text-gray-700">{Math.round(progress)}%</span>
+            {/* Download */}
+            <Button
+              onClick={downloadPDF}
+              className=""
+              variant="default"
+            >
+              <Download size={14} />
+              Download
+            </Button>
+
+            {/* User avatar button */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setShowUserMenu(v => !v)}
+                className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-[var(--radius)] hover:bg-[#fff7ed] transition-colors"
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
+                  {initials}
+                </div>
+                <span className="text-sm font-medium text-stone-700 hidden sm:block max-w-[100px] truncate">{displayName}</span>
+                <ChevronDown size={13} className={`text-stone-400 transition-transform duration-150 ${showUserMenu ? "rotate-180" : ""}`} />
+              </button>
+
+              {/* Dropdown */}
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-lg shadow-xl border border-[#fde3c8] overflow-hidden z-50">
+                  {/* User info */}
+                  <div className="px-4 py-3 border-b border-[#fde3c8] bg-[#fff7ed]">
+                    <p className="text-sm font-bold text-stone-800 truncate">{displayName}</p>
+                    <p className="text-xs text-stone-400 truncate">{user?.email}</p>
+                  </div>
+                  {/* Menu items */}
+                  <div className="py-1">
+                    <button
+                      onClick={() => { setShowUserMenu(false); navigate("/dashboard"); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-[#fff7ed] hover:text-[#9a3412] transition-colors"
+                    >
+                      <LayoutDashboard size={15} className="text-stone-400" />
+                      Dashboard
+                    </button>
+                    <div className="h-px bg-[#fde3c8] mx-2 my-1" />
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#dc2626] hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut size={15} />
+                      Sign out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <Progress value={progress} className="h-2" />
-          </div> */}
+          </div>
+        </header>
+        {/* ── END HEADER ─────────────────────────────────────────────── */}
 
-          {/* Step Navigation */}
+        <div className="w-full flex-1 min-h-0">
 
           {steps.map((step) => {
             const Icon = step.icon;
@@ -414,86 +442,82 @@ useEffect(() => {
             const isCompleted = currentStep > step.id;
           })}
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 h-[calc(100vh-64px)]">
-            {/* Form Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 h-[calc(100vh-56px)]">
+            {/* Left Panel — Edit form OR Customize panel, hidden in preview */}
             <div
-              className="lg:col-span-2 rounded-md hide-scrollbar flex flex-col min-h-0"
+              className={`lg:col-span-2 rounded-md hide-scrollbar flex flex-col min-h-0 ${activeView === "preview" ? "hidden lg:hidden" : ""}`}
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              <Card className="border-orange-200 shadow-lg rounded-md flex flex-col min-h-0  mx-1 mt-1 flex-1">
-                <CardHeader className="flex-shrink-0">
-                  <CardTitle className="flex items-center">
-                    {(() => {
-                      const Icon = steps[currentStep].icon;
-                      return <Icon className="w-5 h-5 mr-2 text-orange-600" />;
-                    })()}
-                    {steps[currentStep].title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent
-                  className="flex-1 overflow-y-auto hide-scrollbar min-h-0"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                >
-                  {renderStepContent()}
-                </CardContent>
-              </Card>
-
-              {/* Navigation Buttons - Sticky */}
-              <div className="sticky bottom-0 bg-white border-t border-gray-200 shadow-lg p-4 flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-                  disabled={currentStep === 0}
-                >
-                  Previous
-                </Button>
-
-                <div className="space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowPreview(!showPreview)}
-                    className="lg:hidden"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    {showPreview ? "Hide" : "Show"} Preview
-                  </Button>
-
-                  {currentStep < steps.length - 1 ? (
-                    <Button
-                      onClick={() =>
-                        setCurrentStep(
-                          Math.min(steps.length - 1, currentStep + 1),
-                        )
-                      }
-                      className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-                    >
-                      Next
-                    </Button>
-                  ) : (
-                    <Button onClick={downloadPDF} className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Resume
-                    </Button>
-                  )}
+              {/* ── CUSTOMIZE MODE ── */}
+              {activeView === "customize" && (
+                <div className="flex-1 flex flex-col min-h-0 mx-1 mt-1 border border-orange-200 shadow-lg rounded-md overflow-hidden">
+                  <CustomizePanel selectedId={selectedId} onSelectTemplate={setSelectedId} accentColor={accentColor} onAccentChange={setAccentColor} />
                 </div>
-              </div>
+              )}
+
+              {/* ── EDIT MODE ── */}
+              {activeView === "edit" && (
+                <>
+                  <Card className="border-orange-200 shadow-lg rounded-md flex flex-col min-h-0 mx-1 mt-1 flex-1">
+                    <CardHeader className="flex-shrink-0">
+                      <CardTitle className="flex items-center">
+                        {(() => {
+                          const Icon = steps[currentStep].icon;
+                          return <Icon className="w-5 h-5 mr-2 text-orange-600" />;
+                        })()}
+                        {steps[currentStep].title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent
+                      className="flex-1 overflow-y-auto hide-scrollbar min-h-0"
+                      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                    >
+                      {renderStepContent()}
+                    </CardContent>
+                  </Card>
+
+                  {/* Navigation Buttons */}
+                  <div className="sticky bottom-0 bg-white border-t border-gray-200 shadow-lg p-4 flex justify-between">
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                      disabled={currentStep === 0}
+                    >
+                      Back
+                    </Button>
+                    <div className="space-x-2">
+                      {currentStep < steps.length - 1 ? (
+                        <Button
+                          onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+                          className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                        >
+                          Next
+                        </Button>
+                      ) : (
+                        <Button onClick={downloadPDF} className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
+                          <Download className="w-4 h-4 mr-2" />
+                          Download Resume
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* Preview Section */}
+            {/* Preview Section — full width in preview mode */}
             <div
-              className="lg:col-span-2 hide-scrollbar flex flex-col min-h-0"
+              className={`hide-scrollbar flex flex-col min-h-0 ${activeView === "preview" ? "lg:col-span-4" : "lg:col-span-2"}`}
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               <div
-                className={`flex-1 overflow-y-auto ${
-                  showPreview ? "block" : "hidden lg:block"
-                } hide-scrollbar min-h-0`}
+                className="flex-1 overflow-y-auto hide-scrollbar min-h-0"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
                 <div className="bg-white shadow-lg">
                   <div id="resume-preview-id">
-                    <ResumePreview selectedId={selectedId} />
-                  </div>
+                    <ResumePreview selectedId={selectedId} accentColor={accentColor} />
+                    </div>
                 </div>
               </div>
             </div>

@@ -48,12 +48,8 @@ export const ResumeInfoProvider = ({ children }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const savedDraft = localStorage.getItem(LOCAL_DRAFT_KEY);
-    if (savedDraft) {
-      setResumeData(JSON.parse(savedDraft));
-    }
-  }, []);
+  // localStorage restore intentionally removed.
+  // Data is initialised by CreateResume (scratch/prefilled) or loadResumeById (edit).
 
   useEffect(() => {
     if (Object.keys(resumeData).length > 0) {

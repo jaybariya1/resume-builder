@@ -1,197 +1,144 @@
 import React, { useState, useEffect } from "react";
 import { X, Check, Palette } from "lucide-react";
+import Template1 from "./templates/Template1/Template1";
+import Template2 from "./templates/Template2/Template2";
+import Template3 from "./templates/Template3/Template3";
+import Template4 from "./templates/Template4/Template4";
+import Template5 from "./templates/Template5/Template5";
+// import Template6 from "./templates/Template6/Template6";
 
-// ─── Mini thumbnail previews for each template ───────────────────────────────
-
-const ClassicThumb = () => (
-  <div className="w-full h-full bg-white p-3 flex flex-col gap-1.5 font-sans">
-    <div className="h-3 w-24 bg-gray-900 rounded-sm" />
-    <div className="h-1.5 w-16 bg-gray-400 rounded-sm" />
-    <div className="h-px w-full bg-gray-200 my-1" />
-    <div className="flex flex-col gap-1">
-      {[80, 60, 70, 55, 65].map((w, i) => (
-        <div key={i} className="h-1 rounded-sm bg-gray-200" style={{ width: `${w}%` }} />
-      ))}
-    </div>
-    <div className="mt-1.5 h-px w-full bg-gray-100" />
-    <div className="flex gap-1 flex-wrap mt-1">
-      {[30, 25, 35, 28].map((w, i) => (
-        <div key={i} className="h-3 rounded-sm border border-gray-300" style={{ width: `${w}%` }} />
-      ))}
-    </div>
-  </div>
-);
-
-const ExecutiveThumb = () => (
-  <div className="w-full h-full bg-white flex">
-    <div className="w-[38%] h-full p-2 flex flex-col gap-2" style={{ backgroundColor: "#1e293b" }}>
-      <div className="h-2.5 w-full rounded-sm bg-white/20" />
-      <div className="h-1.5 w-3/4 rounded-sm" style={{ backgroundColor: "#f97316" }} />
-      <div className="h-px w-full bg-white/10 my-0.5" />
-      <div className="flex flex-col gap-1">
-        {[90, 70, 80, 60, 75].map((w, i) => (
-          <div key={i} className="h-1 rounded-sm bg-white/20" style={{ width: `${w}%` }} />
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-0.5 mt-1">
-        {[3, 4, 3, 4, 3].map((w, i) => (
-          <div key={i} className="h-2 rounded-full" style={{ width: `${w * 8}px`, backgroundColor: "#334155" }} />
-        ))}
-      </div>
-    </div>
-    <div className="flex-1 p-2 flex flex-col gap-1.5">
-      <div className="h-1.5 w-full rounded-sm bg-gray-200" />
-      <div className="h-1.5 w-4/5 rounded-sm bg-gray-200" />
-      <div className="h-px w-full bg-orange-100 my-0.5" />
-      <div className="flex justify-between items-center">
-        <div className="h-2 w-2/5 rounded-sm bg-gray-800" />
-        <div className="h-1 w-1/4 rounded-sm" style={{ backgroundColor: "#f97316" }} />
-      </div>
-      {[85, 70, 90].map((w, i) => (
-        <div key={i} className="h-1 rounded-sm bg-gray-100" style={{ width: `${w}%` }} />
-      ))}
-    </div>
-  </div>
-);
-
-const ElegantThumb = () => (
-  <div className="w-full h-full bg-white p-3 flex flex-col gap-1.5">
-    <div className="h-1.5 w-full rounded-full" style={{ backgroundColor: "#7c3aed" }} />
-    <div className="mt-1 h-3.5 w-28 rounded-sm" style={{ backgroundColor: "#1e1b4b" }} />
-    <div className="h-1.5 w-16 rounded-sm" style={{ backgroundColor: "#7c3aed", opacity: 0.6 }} />
-    <div className="h-1 w-32 rounded-sm bg-gray-300" />
-    <div className="mt-1 flex flex-col gap-0.5">
-      <div className="flex justify-between items-center">
-        <div className="h-1.5 w-2/5 rounded-sm" style={{ backgroundColor: "#7c3aed", opacity: 0.2 }} />
-        <div className="text-[4px] text-gray-400 font-serif uppercase tracking-widest">Experience</div>
-      </div>
-      <div className="h-px w-full" style={{ backgroundColor: "#7c3aed", opacity: 0.2 }} />
-    </div>
-    <div className="flex flex-col gap-1">
-      {[90, 70, 80, 65].map((w, i) => (
-        <div key={i} className="h-1 rounded-sm bg-gray-200" style={{ width: `${w}%` }} />
-      ))}
-    </div>
-  </div>
-);
-
-const FreshThumb = () => (
-  <div className="w-full h-full flex flex-col">
-    <div className="px-3 pt-2 pb-1.5" style={{ backgroundColor: "#f0fdf4" }}>
-      <div className="flex justify-between items-end">
-        <div>
-          <div className="h-2.5 w-20 rounded-sm" style={{ backgroundColor: "#14532d" }} />
-          <div className="mt-0.5 h-1.5 w-14 rounded-sm" style={{ backgroundColor: "#16a34a" }} />
-        </div>
-        <div className="flex flex-col gap-0.5 items-end">
-          {[16, 20, 14].map((w, i) => (
-            <div key={i} className="h-1 rounded-sm bg-gray-300" style={{ width: `${w}px` }} />
-          ))}
-        </div>
-      </div>
-      <div className="mt-1.5 h-[2px] w-full rounded-full" style={{ backgroundColor: "#16a34a" }} />
-    </div>
-    <div className="flex-1 px-3 py-1.5 flex flex-col gap-1.5">
-      {[0, 1, 2].map((sec) => (
-        <div key={sec} className="flex gap-1.5">
-          <div className="w-[2px] rounded-full flex-shrink-0" style={{ backgroundColor: "#bbf7d0" }} />
-          <div className="flex flex-col gap-0.5 flex-1">
-            <div className="h-1.5 w-3/4 rounded-sm bg-gray-300" />
-            <div className="h-1 w-full rounded-sm bg-gray-100" />
-            <div className="h-1 w-4/5 rounded-sm bg-gray-100" />
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const TraditionalThumb = () => (
-  <div style={{ width: "100%", height: "100%", background: "#fff", padding: "7px 6px", boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
-    <div style={{ width: "55%", height: "6px", background: "#111", borderRadius: "1px", marginBottom: "2px" }} />
-    <div style={{ width: "80%", height: "2px", background: "#aaa", borderRadius: "1px", marginBottom: "3px" }} />
-    <div style={{ width: "100%", height: "1px", background: "#000", marginBottom: "4px" }} />
-    {[0,1,2].map(s => (
-      <div key={s} style={{ width: "100%" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "3px", marginBottom: "2px" }}>
-          <div style={{ width: "28px", height: "2.5px", background: "#333", borderRadius: "1px" }} />
-          <div style={{ flex: 1, height: "1px", background: "#000" }} />
-        </div>
-        <div style={{ display: "flex", gap: "4px", marginBottom: "3px" }}>
-          <div style={{ width: "22px", height: "2px", background: "#bbb", borderRadius: "1px", marginTop: "2px" }} />
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "2px" }}>
-            <div style={{ width: "70%", height: "2.5px", background: "#333", borderRadius: "1px" }} />
-            <div style={{ width: "50%", height: "2px", background: "#888", borderRadius: "1px" }} />
-            <div style={{ width: "90%", height: "1.5px", background: "#ccc", borderRadius: "1px" }} />
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-
-const THUMB_MAP = {
-  modern: ClassicThumb,
-  sidebar: ExecutiveThumb,
-  elegant: ElegantThumb,
-  minimal: FreshThumb,
-  traditional: TraditionalThumb,
+// ─── Sample resume data (Sebastian Bennett from the PDF) ──────────────────────
+const SAMPLE_DATA = {
+  firstName: "Sebastian",
+  lastName: "Bennett",
+  email: "hello@reallygreatsite.com",
+  phone: "+123-456-7890",
+  city: "Any City",
+  country: "",
+  location: "123 Anywhere St., Any City",
+  role: "Professional Accountant",
+  summary:
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididuntut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitationullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor inreprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+  linkedin: "",
+  github: "",
+  portfolio: "",
+  website: "",
+  experience: [
+    {
+      id: "e1",
+      title: "Senior Accountant",
+      company: "Salford & Co.",
+      location: "New York, NY",
+      startDate: "2033",
+      endDate: "2035",
+      current: false,
+      description:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididuntut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitationullamco laboris nisi ut aliquip ex ea commodo consequat.",
+    },
+    {
+      id: "e2",
+      title: "Financial Accountant",
+      company: "Salford & Co.",
+      location: "New York, NY",
+      startDate: "2030",
+      endDate: "2033",
+      current: false,
+      description:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididuntut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitationullamco laboris nisi ut aliquip ex ea commodo consequat.",
+    },
+  ],
+  education: [
+    {
+      id: "ed1",
+      degree: "Senior Accountant",
+      school: "Borcelle University",
+      location: "",
+      graduationDate: "2030",
+      gpa: "",
+      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididuntut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitationullamco laboris nisi ut aliquip ex ea commodo consequat.",
+    },
+    {
+      id: "ed2",
+      degree: "Bachelor of Commerce",
+      school: "Borcelle University",
+      location: "",
+      graduationDate: "2026",
+      gpa: "",
+      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididuntut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitationullamco laboris nisi ut aliquip ex ea commodo consequat.",
+    },
+  ],
+  skills: [
+    { id: "s1", name: "Financial Accounting", level: 3 },
+    { id: "s2", name: "Auditing", level: 3 },
+    { id: "s3", name: "Financial Reporting", level: 2 },
+    { id: "s4", name: "Tax Compliance", level: 2 },
+    { id: "s5", name: "Microsoft Excel", level: 3 },
+    { id: "s6", name: "QuickBooks", level: 2 },
+  ],
+  project: [],
+  hideSkillLevel: false,
+  certifications: [],
+  languages: [],
+  volunteer: [],
+  awards: [],
 };
 
-// ─── Main TemplatePicker ──────────────────────────────────────────────────────
+// ─── Template registry ────────────────────────────────────────────────────────
+const TEMPLATES = [
+  { id: "modern",      name: "Classic",      description: "Clean & ATS-friendly",      accent: "#1e293b", tag: "Popular",   Component: Template1 },
+  { id: "sidebar",     name: "Executive",    description: "Dark sidebar, two-column",   accent: "#f97316", tag: "Bold",      Component: Template2 },
+  { id: "elegant",     name: "Elegant",      description: "Serif, purple accents",      accent: "#7c3aed", tag: "Refined",   Component: Template3 },
+  { id: "minimal",     name: "Fresh",        description: "Green minimal borders",      accent: "#16a34a", tag: "Modern",    Component: Template4 },
+  { id: "traditional", name: "Traditional",  description: "Classic serif, date-left",   accent: "#000000", tag: "Classic",   Component: Template5 },
+  // { id: "minimalist",  name: "Minimalist",   description: "B&W centered, dark footer",  accent: "#1c1c1c", tag: "Minimal",   Component: Template6 },
+];
 
+// ─── Scaled live preview thumbnail ───────────────────────────────────────────
+// The real template renders at 794px wide. We scale it down to fit a 120×156px box.
+const THUMB_W = 120;
+const THUMB_H = 156;
+const TEMPLATE_W = 794;
+const SCALE = THUMB_W / TEMPLATE_W;
+
+function LiveThumb({ Component }) {
+  return (
+    <div
+      style={{
+        width: THUMB_W,
+        height: THUMB_H,
+        overflow: "hidden",
+        position: "relative",
+        flexShrink: 0,
+      }}
+    >
+      {/* Wrapper that scales the full-size template down */}
+      <div
+        style={{
+          transformOrigin: "top left",
+          transform: `scale(${SCALE})`,
+          width: TEMPLATE_W,
+          // Let height be natural — clipped by parent overflow:hidden
+          pointerEvents: "none",
+          userSelect: "none",
+        }}
+      >
+        <Component data={SAMPLE_DATA} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Main TemplatePicker ──────────────────────────────────────────────────────
 const TemplatePicker = ({ isOpen, onClose, selectedId, onSelect }) => {
   const [hoveredId, setHoveredId] = useState(null);
   const [animateIn, setAnimateIn] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      requestAnimationFrame(() => setAnimateIn(true));
-    } else {
-      setAnimateIn(false);
-    }
+    if (isOpen) requestAnimationFrame(() => setAnimateIn(true));
+    else setAnimateIn(false);
   }, [isOpen]);
 
   if (!isOpen) return null;
-
-  const templates = [
-    {
-      id: "modern",
-      name: "Classic",
-      description: "Clean & ATS-friendly",
-      accent: "#1e293b",
-      tag: "Popular",
-    },
-    {
-      id: "sidebar",
-      name: "Executive",
-      description: "Dark sidebar, two-column",
-      accent: "#f97316",
-      tag: "Bold",
-    },
-    {
-      id: "elegant",
-      name: "Elegant",
-      description: "Serif, purple accents",
-      accent: "#7c3aed",
-      tag: "Refined",
-    },
-    {
-      id: "minimal",
-      name: "Fresh",
-      description: "Green minimal borders",
-      accent: "#16a34a",
-      tag: "Modern",
-    },
-    {
-      id: "traditional",
-      name: "Traditional",
-      description: "Classic serif, date-left",
-      accent: "#000000",
-      tag: "Classic",
-    },
-  ];
 
   return (
     <>
@@ -199,8 +146,7 @@ const TemplatePicker = ({ isOpen, onClose, selectedId, onSelect }) => {
       <div
         onClick={onClose}
         style={{
-          position: "fixed",
-          inset: 0,
+          position: "fixed", inset: 0,
           backgroundColor: "rgba(0,0,0,0.45)",
           zIndex: 9998,
           opacity: animateIn ? 1 : 0,
@@ -209,206 +155,104 @@ const TemplatePicker = ({ isOpen, onClose, selectedId, onSelect }) => {
         }}
       />
 
-      {/* Drawer panel */}
+      {/* Drawer */}
       <div
         style={{
-          position: "fixed",
-          top: 0,
-          right: 0,
-          bottom: 0,
+          position: "fixed", top: 0, right: 0, bottom: 0,
           width: "420px",
           backgroundColor: "#ffffff",
           zIndex: 9999,
           transform: animateIn ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
-          display: "flex",
-          flexDirection: "column",
+          display: "flex", flexDirection: "column",
           boxShadow: "-8px 0 32px rgba(0,0,0,0.15)",
         }}
       >
         {/* Header */}
-        <div
-          style={{
-            padding: "24px 24px 20px",
-            borderBottom: "1px solid #f1f5f9",
-            background: "linear-gradient(135deg, #fff 0%, #fafaf8 100%)",
-          }}
-        >
+        <div style={{ padding: "24px 24px 20px", borderBottom: "1px solid #f1f5f9", background: "linear-gradient(135deg,#fff,#fafaf8)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
-                style={{
-                  width: "34px",
-                  height: "34px",
-                  borderRadius: "10px",
-                  background: "linear-gradient(135deg, #f97316, #ef4444)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#f97316,#ef4444)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Palette size={16} color="white" />
               </div>
               <div>
-                <h2 style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", margin: 0 }}>
-                  Choose Template
-                </h2>
-                <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
-                  Pick a style for your resume
-                </p>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", margin: 0 }}>Choose Template</h2>
+                <p style={{ fontSize: 12, color: "#94a3b8", margin: 0 }}>Pick a style for your resume</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "8px",
-                border: "1px solid #e2e8f0",
-                background: "white",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#64748b",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#f8fafc";
-                e.currentTarget.style.borderColor = "#cbd5e1";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "white";
-                e.currentTarget.style.borderColor = "#e2e8f0";
-              }}
+              style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid #e2e8f0", background: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", transition: "all 0.15s" }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#f8fafc"; e.currentTarget.style.borderColor = "#cbd5e1"; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = "white"; e.currentTarget.style.borderColor = "#e2e8f0"; }}
             >
               <X size={14} />
             </button>
           </div>
         </div>
 
-        {/* Template Grid */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: "20px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "14px",
-          }}
-        >
-          {templates.map((t, index) => {
-            const Thumb = THUMB_MAP[t.id];
+        {/* Template list */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
+          {TEMPLATES.map((t, index) => {
             const isSelected = selectedId === t.id;
             const isHovered = hoveredId === t.id;
 
             return (
               <div
                 key={t.id}
-                onClick={() => {
-                  onSelect(t.id);
-                  onClose();
-                }}
+                onClick={() => { onSelect(t.id); onClose(); }}
                 onMouseEnter={() => setHoveredId(t.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 style={{
                   cursor: "pointer",
-                  borderRadius: "14px",
+                  borderRadius: 14,
                   border: `2px solid ${isSelected ? t.accent : isHovered ? "#e2e8f0" : "#f1f5f9"}`,
                   backgroundColor: isSelected ? `${t.accent}08` : "white",
-                  padding: "14px",
-                  display: "flex",
-                  gap: "14px",
-                  alignItems: "center",
+                  padding: "12px",
+                  display: "flex", gap: "14px", alignItems: "center",
                   transition: "all 0.18s ease",
                   transform: isHovered && !isSelected ? "translateY(-1px)" : "none",
                   boxShadow: isSelected
                     ? `0 0 0 1px ${t.accent}30, 0 4px 16px ${t.accent}15`
-                    : isHovered
-                    ? "0 4px 16px rgba(0,0,0,0.07)"
-                    : "none",
-                  animationDelay: `${index * 60}ms`,
+                    : isHovered ? "0 4px 16px rgba(0,0,0,0.07)" : "none",
                 }}
               >
-                {/* Thumbnail */}
+                {/* Live thumbnail */}
                 <div
                   style={{
-                    width: "100px",
-                    height: "130px",
-                    flexShrink: 0,
-                    borderRadius: "8px",
+                    borderRadius: 8,
                     overflow: "hidden",
                     border: `1px solid ${isSelected ? t.accent + "40" : "#e8ecef"}`,
                     boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
                     position: "relative",
+                    flexShrink: 0,
                   }}
                 >
-                  <Thumb />
+                  <LiveThumb Component={t.Component} />
                   {isSelected && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        backgroundColor: `${t.accent}15`,
-                        borderRadius: "7px",
-                      }}
-                    />
+                    <div style={{ position: "absolute", inset: 0, backgroundColor: `${t.accent}18`, borderRadius: 7 }} />
                   )}
                 </div>
 
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                    <span style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a" }}>
-                      {t.name}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "9px",
-                        fontWeight: 700,
-                        letterSpacing: "0.06em",
-                        textTransform: "uppercase",
-                        color: t.accent,
-                        backgroundColor: `${t.accent}15`,
-                        padding: "2px 6px",
-                        borderRadius: "20px",
-                      }}
-                    >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>{t.name}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: t.accent, backgroundColor: `${t.accent}15`, padding: "2px 6px", borderRadius: 20 }}>
                       {t.tag}
                     </span>
                   </div>
-                  <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0, lineHeight: 1.5 }}>
-                    {t.description}
-                  </p>
+                  <p style={{ fontSize: 12.5, color: "#64748b", margin: 0, lineHeight: 1.5 }}>{t.description}</p>
 
-                  {/* Color swatch */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "10px" }}>
-                    <div
-                      style={{
-                        width: "12px",
-                        height: "12px",
-                        borderRadius: "50%",
-                        backgroundColor: t.accent,
-                      }}
-                    />
-                    <span style={{ fontSize: "11px", color: "#94a3b8" }}>Accent color</span>
+                  {/* Accent swatch */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
+                    <div style={{ width: 12, height: 12, borderRadius: "50%", backgroundColor: t.accent }} />
+                    <span style={{ fontSize: 11, color: "#94a3b8" }}>Accent color</span>
                   </div>
 
                   {isSelected && (
-                    <div
-                      style={{
-                        marginTop: "10px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "5px",
-                        color: t.accent,
-                        fontSize: "12px",
-                        fontWeight: 600,
-                      }}
-                    >
-                      <Check size={13} strokeWidth={2.5} />
-                      Currently selected
+                    <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 5, color: t.accent, fontSize: 12, fontWeight: 600 }}>
+                      <Check size={13} strokeWidth={2.5} /> Currently selected
                     </div>
                   )}
                 </div>
@@ -418,14 +262,8 @@ const TemplatePicker = ({ isOpen, onClose, selectedId, onSelect }) => {
         </div>
 
         {/* Footer */}
-        <div
-          style={{
-            padding: "16px 20px",
-            borderTop: "1px solid #f1f5f9",
-            backgroundColor: "#fafaf8",
-          }}
-        >
-          <p style={{ fontSize: "11.5px", color: "#94a3b8", textAlign: "center", margin: 0 }}>
+        <div style={{ padding: "16px 20px", borderTop: "1px solid #f1f5f9", backgroundColor: "#fafaf8" }}>
+          <p style={{ fontSize: 11.5, color: "#94a3b8", textAlign: "center", margin: 0 }}>
             Your content stays the same when switching templates
           </p>
         </div>

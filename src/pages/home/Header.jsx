@@ -1,4 +1,5 @@
-import { Button } from "../../components/ui/button";
+import { Button } from "@/components/ui/button";
+// already imported from "../../components/ui/button";
 import { Menu, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
 import {
@@ -54,12 +55,7 @@ export default function Header() {
               How It Works
             </a>
             {isAuthenticated && (
-              <button
-                onClick={() => navigate("/dashboard")}
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                Dashboard
-              </button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>Dashboard</Button>
             )}
           </nav>
 
@@ -137,12 +133,7 @@ export default function Header() {
                 How It Works
               </a>
               {isAuthenticated && (
-                <button
-                  onClick={() => { navigate("/dashboard"); setIsMenuOpen(false); }}
-                  className="block w-full text-left px-3 py-2 text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Dashboard
-                </button>
+                <Button variant="ghost" size="sm" onClick={() => { navigate("/dashboard"); setIsMenuOpen(false); }} className="w-full justify-start px-3">Dashboard</Button>
               )}
             </div>
 

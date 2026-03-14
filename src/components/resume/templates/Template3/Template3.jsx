@@ -1,6 +1,6 @@
 import React from "react";
 
-const Template3 = ({ data }) => {
+const Template3 = ({ data, accentColor = "#7c3aed" }) => {
   const {
     firstName,
     lastName,
@@ -23,10 +23,10 @@ const Template3 = ({ data }) => {
   const SectionTitle = ({ children }) => (
     <h2
       className="text-[11px] uppercase tracking-[0.2em] font-semibold mt-6 mb-3"
-      style={{ color: "#7c3aed", fontFamily: "Georgia, serif" }}
+      style={{ color: accentColor, fontFamily: "Georgia, serif" }}
     >
       {children}
-      <div className="mt-1 h-[1.5px]" style={{ backgroundColor: "#7c3aed", opacity: 0.3 }} />
+      <div className="mt-1 h-[1.5px]" style={{ backgroundColor: accentColor, opacity: 0.3 }} />
     </h2>
   );
 
@@ -39,7 +39,7 @@ const Template3 = ({ data }) => {
       style={{ fontFamily: "Georgia, serif" }}
     >
       {/* TOP ACCENT BAR */}
-      <div className="h-1.5 w-full mb-8 rounded-full" style={{ backgroundColor: "#7c3aed" }} />
+      <div className="h-1.5 w-full mb-8 rounded-full" style={{ backgroundColor: accentColor }} />
 
       {/* HEADER */}
       <header className="mb-2">
@@ -50,7 +50,7 @@ const Template3 = ({ data }) => {
           {firstName} {lastName}
         </h1>
         {role && (
-          <p className="text-[14px] mt-1 font-normal italic" style={{ color: "#7c3aed" }}>
+          <p className="text-[14px] mt-1 font-normal italic" style={{ color: accentColor }}>
             {role}
           </p>
         )}
@@ -187,7 +187,7 @@ const Template3 = ({ data }) => {
                   {!hideSkillLevel && (
                     <div className="flex gap-0.5 mt-0.5">
                       {[0,1,2,3].map(i => (
-                        <div key={i} className="flex-1 h-1 rounded-full" style={{ backgroundColor: i < filled ? "#7c3aed" : "#e9d5ff" }} />
+                        <div key={i} className="flex-1 h-1 rounded-full" style={{ backgroundColor: i < filled ? accentColor : accentColor + "33" }} />
                       ))}
                     </div>
                   )}

@@ -8,6 +8,9 @@ import {
   Briefcase, GraduationCap, Code2, Award, User2,
   TrendingUp, Zap, Home,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -59,13 +62,13 @@ function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
 
   return (
     <div
-      className="group relative flex flex-col gap-3 p-4 rounded-2xl border border-orange-100 bg-white hover:border-orange-300 hover:shadow-lg transition-all duration-200 cursor-pointer"
+      className="group relative flex flex-col gap-3 p-4 rounded-lg border border-[#fde3c8] bg-white hover:border-[#fdba74] hover:shadow-md transition-all duration-200 cursor-pointer"
       onClick={() => onEdit(resume.id)}
     >
       {/* Top row */}
       <div className="flex items-start gap-3">
         {/* Icon */}
-        <div className="flex-shrink-0 w-10 h-12 rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 border border-orange-100 flex flex-col items-center justify-center gap-0.5">
+        <div className="flex-shrink-0 w-10 h-12 rounded-md bg-[#fff7ed] border border-[#fde3c8] flex flex-col items-center justify-center gap-0.5">
           <FileText className="h-4 w-4 text-orange-500" />
           <div className="flex gap-0.5">
             {[1,2,3].map(i => <div key={i} className="h-0.5 w-1.5 rounded-full bg-orange-200" />)}
@@ -91,47 +94,20 @@ function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
           className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0"
           onClick={e => e.stopPropagation()}
         >
-          <button
-            title="Edit"
-            onClick={() => onEdit(resume.id)}
-            className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-orange-600 hover:bg-orange-50 transition-colors"
-          >
+          <Button variant="ghost" size="icon-sm" title="Edit" onClick={() => onEdit(resume.id)} className="h-7 w-7 text-muted-foreground hover:text-orange-600">
             <Edit3 className="h-3.5 w-3.5" />
-          </button>
-          <button
-            title="Duplicate"
-            disabled={duplicating}
-            onClick={async () => {
-              setDuplicating(true);
-              await onDuplicate(resume);
-              setDuplicating(false);
-            }}
-            className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-orange-500 hover:bg-orange-50 transition-colors disabled:opacity-50"
-          >
+          </Button>
+          <Button variant="ghost" size="icon-sm" title="Duplicate" disabled={duplicating} onClick={async () => { setDuplicating(true); await onDuplicate(resume); setDuplicating(false); }} className="h-7 w-7 text-muted-foreground hover:text-orange-500">
             <Copy className="h-3.5 w-3.5" />
-          </button>
+          </Button>
           {confirmDelete ? (
-            <button
-              onClick={async () => {
-                setDeleting(true);
-                await onDelete(resume.id);
-                setDeleting(false);
-                setConfirmDelete(false);
-              }}
-              disabled={deleting}
-              className="h-7 px-2 flex items-center justify-center rounded-lg bg-red-500 text-white text-[10px] font-semibold transition-colors"
-            >
+            <Button variant="destructive" size="xs" disabled={deleting} onClick={async () => { setDeleting(true); await onDelete(resume.id); setDeleting(false); setConfirmDelete(false); }}>
               {deleting ? "…" : "Sure?"}
-            </button>
+            </Button>
           ) : (
-            <button
-              title="Delete"
-              onClick={() => setConfirmDelete(true)}
-              onBlur={() => setTimeout(() => setConfirmDelete(false), 200)}
-              className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
-            >
+            <Button variant="ghost" size="icon-sm" title="Delete" onClick={() => setConfirmDelete(true)} onBlur={() => setTimeout(() => setConfirmDelete(false), 200)} className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-50">
               <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -142,19 +118,13 @@ function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
       {/* Tags */}
       <div className="flex gap-1.5 flex-wrap">
         {expCount > 0 && (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-100">
-            {expCount} exp
-          </span>
+          <Badge variant="secondary">{expCount} exp</Badge>
         )}
         {skillCount > 0 && (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100">
-            {skillCount} skills
-          </span>
+          <Badge variant="warm">{skillCount} skills</Badge>
         )}
         {pct === 100 && (
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-            ✓ Complete
-          </span>
+          <Badge variant="outline">✓ Complete</Badge>
         )}
       </div>
     </div>
@@ -171,8 +141,8 @@ function StatCard({ icon: Icon, label, value, accent = "orange" }) {
     purple: "from-red-400 to-red-500",
   };
   return (
-    <div className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-orange-100 shadow-sm">
-      <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${colors[accent]} shadow-sm`}>
+    <div className="flex items-center gap-4 p-4 rounded-lg bg-white border border-[#fde3c8] shadow-sm">
+      <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${colors[accent]} shadow-sm`}>
         <Icon className="h-5 w-5 text-white" />
       </div>
       <div>
@@ -189,7 +159,7 @@ function EmptyState({ onCreate }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center px-4">
       <div className="relative mb-6">
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-orange-100 to-amber-50 border border-orange-200 flex items-center justify-center">
+        <div className="w-20 h-20 rounded-lg bg-[#fff7ed] border border-[#fde3c8] flex items-center justify-center">
           <FileText className="h-9 w-9 text-orange-400" />
         </div>
         <div className="absolute -right-1 -top-1 w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
@@ -200,13 +170,10 @@ function EmptyState({ onCreate }) {
       <p className="text-sm text-muted-foreground mb-6 max-w-xs leading-relaxed">
         Create your first AI-powered resume in minutes and start landing more interviews.
       </p>
-      <button
-        onClick={onCreate}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold shadow-md hover:shadow-lg hover:from-orange-600 hover:to-red-600 transition-all"
-      >
+      <Button onClick={onCreate} size="lg">
         <Sparkles className="h-4 w-4" />
         Create Your First Resume
-      </button>
+      </Button>
     </div>
   );
 }
@@ -291,11 +258,8 @@ export default function Dashboard() {
           <div className="flex h-16 items-center justify-between gap-4">
 
             {/* Logo */}
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2 text-sm font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent flex-shrink-0"
-            >
-              <Zap className="h-4 w-4 text-orange-500" />
+            <button onClick={() => navigate("/")} className="flex items-center gap-2 text-sm font-bold text-orange-600 flex-shrink-0 hover:text-orange-700 transition-colors">
+              <Zap className="h-4 w-4" />
               AI Resume Builder
             </button>
 
@@ -306,27 +270,21 @@ export default function Dashboard() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search resumes…"
-                className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-border/60 bg-orange-50/50 focus:bg-white focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+                className="w-full pl-9 pr-4 py-2 text-sm rounded-[var(--radius)] border border-[#fde3c8] bg-[#fff7ed] focus:bg-white focus:outline-none focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/20 transition-all"
               />
             </div>
 
             {/* Right */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={() => navigate("/")}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-orange-50 transition-colors"
-              >
+              <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="hidden sm:flex">
                 <Home className="h-4 w-4" />
                 Home
-              </button>
-              <button
-                onClick={() => navigate("/resume/new")}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold shadow-sm hover:shadow-md hover:from-orange-600 hover:to-red-600 transition-all"
-              >
+              </Button>
+              <Button onClick={() => navigate("/resume/new")}>
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">New Resume</span>
                 <span className="sm:hidden">New</span>
-              </button>
+              </Button>
               {/* Avatar */}
               <button
                 onClick={handleSignOut}
@@ -377,12 +335,9 @@ export default function Dashboard() {
                 )}
               </h2>
               {resumes.length > 0 && (
-                <button
-                  onClick={() => navigate("/resume/new")}
-                  className="flex items-center gap-1 text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors"
-                >
+                <Button variant="link" size="sm" onClick={() => navigate("/resume/new")} className="h-auto p-0 text-xs">
                   <Plus className="h-3.5 w-3.5" /> Add new
-                </button>
+                </Button>
               )}
             </div>
 
@@ -393,14 +348,14 @@ export default function Dashboard() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search resumes…"
-                className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-orange-200 bg-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all"
+                className="w-full pl-9 pr-4 py-2 text-sm rounded-[var(--radius)] border border-[#fde3c8] bg-white focus:outline-none focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/20 transition-all"
               />
             </div>
 
             {filtered.length === 0 && search && (
               <div className="py-12 text-center rounded-2xl border border-dashed border-orange-200 bg-white">
                 <p className="text-sm text-muted-foreground">No results for "<strong>{search}</strong>"</p>
-                <button onClick={() => setSearch("")} className="mt-2 text-xs text-orange-600 hover:underline">Clear search</button>
+                <Button variant="link" size="sm" onClick={() => setSearch("")} className="mt-2 h-auto p-0 text-xs">Clear search</Button>
               </div>
             )}
 
@@ -423,12 +378,9 @@ export default function Dashboard() {
             </div>
 
             {resumes.length > 0 && (
-              <button
-                onClick={() => navigate("/resume/new")}
-                className="mt-4 w-full py-3 rounded-2xl border-2 border-dashed border-orange-300 text-sm font-medium text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all flex items-center justify-center gap-2"
-              >
+              <Button variant="outline" onClick={() => navigate("/resume/new")} className="mt-4 w-full border-dashed">
                 <Plus className="h-4 w-4" /> Create another resume
-              </button>
+              </Button>
             )}
           </div>
 
@@ -436,7 +388,7 @@ export default function Dashboard() {
           <div className="space-y-4">
 
             {/* Profile card */}
-            <div className="rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 p-5 text-white shadow-md">
+            <div className="rounded-lg bg-gradient-to-br from-orange-500 to-red-500 p-5 text-white shadow-md">
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-11 w-11 rounded-full bg-white/20 flex items-center justify-center text-lg font-bold flex-shrink-0">
                   {initials || <User2 className="h-5 w-5" />}
@@ -447,38 +399,35 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 mb-4">
-                <div className="bg-white/15 rounded-xl p-3 text-center">
+                <div className="bg-white/15 rounded-md p-3 text-center">
                   <p className="text-xl font-bold">{resumes.length}</p>
                   <p className="text-xs text-white/70">Resumes</p>
                 </div>
-                <div className="bg-white/15 rounded-xl p-3 text-center">
+                <div className="bg-white/15 rounded-md p-3 text-center">
                   <p className="text-xl font-bold">{avgCompleteness}%</p>
                   <p className="text-xs text-white/70">Avg Score</p>
                 </div>
               </div>
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-sm font-medium transition-colors"
-              >
+              <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 py-2 rounded-md bg-white/15 hover:bg-white/25 text-sm font-semibold transition-colors">
                 <LogOut className="h-4 w-4" /> Sign Out
               </button>
             </div>
 
             {/* Quick actions */}
-            <div className="rounded-2xl bg-white border border-orange-100 p-4 space-y-2">
+            <div className="rounded-lg bg-white border border-[#fde3c8] p-4 space-y-2">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Quick Actions</p>
               {[
-                { icon: Plus,           label: "New Resume",        action: () => navigate("/resume/new"),  style: "bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-sm" },
-                { icon: FileText,       label: "Browse Templates",  action: () => navigate("/resume/new"),  style: "bg-orange-50 text-foreground hover:bg-orange-100 border border-orange-100" },
-              ].map(({ icon: Icon, label, action, style }) => (
-                <button key={label} onClick={action} className={`w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${style}`}>
+                { icon: Plus,      label: "New Resume",       action: () => navigate("/resume/new"), variant: "default" },
+                { icon: FileText,  label: "Browse Templates", action: () => navigate("/resume/new"), variant: "secondary" },
+              ].map(({ icon: Icon, label, action, variant }) => (
+                <Button key={label} onClick={action} variant={variant} className="w-full justify-start">
                   <Icon className="h-4 w-4" /> {label}
-                </button>
+                </Button>
               ))}
             </div>
 
             {/* Resume checklist tip */}
-            <div className="rounded-2xl bg-white border border-orange-100 p-4">
+            <div className="rounded-lg bg-white border border-[#fde3c8] p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="h-4 w-4 text-orange-500" />
                 <p className="text-xs font-bold text-foreground uppercase tracking-wider">Resume Checklist</p>
@@ -501,12 +450,9 @@ export default function Dashboard() {
                 ))}
               </div>
               {resumes.length > 0 && (
-                <button
-                  onClick={() => navigate("/resume/new")}
-                  className="mt-4 w-full flex items-center justify-center gap-1 text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors"
-                >
+                <Button variant="link" size="sm" onClick={() => navigate("/resume/new")} className="mt-4 w-full h-auto p-0 text-xs justify-center">
                   Improve a resume <ChevronRight className="h-3 w-3" />
-                </button>
+                </Button>
               )}
             </div>
 

@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { useEffect, useState } from "react";
 import { Bold, Italic, Underline, List, Link, Undo, Redo } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 function RichTextEditor({ value, onChange }) {
   const editorRef = useRef(null);
@@ -68,76 +69,36 @@ function RichTextEditor({ value, onChange }) {
         <button onClick={() => formatText("insertUnorderedList")}>• List</button>
       </div> */}
 
-      <div className="flex flex-wrap gap-1 p-2 bg-gray-50 border border-gray-300 rounded-t-lg">
-        <button
-          onClick={() => formatText("bold")}
-          className={`p-2 hover:bg-gray-200 rounded transition-colors ${
-            active.bold ? "bg-gray-300" : ""
-          }`}
-          title="Bold (Ctrl+B)"
-        >
-          <Bold size={18} />
-        </button>
-        <button
-          onClick={() => formatText("italic")}
-          className={`p-2 hover:bg-gray-200 rounded transition-colors ${
-            active.italic ? "bg-gray-300" : ""
-          }`}
-          title="Italic (Ctrl+I)"
-        >
-          <Italic size={18} />
-        </button>
-        <button
-          onClick={() => formatText("underline")}
-          className={`p-2 hover:bg-gray-200 rounded transition-colors ${
-            active.underline ? "bg-gray-300" : ""
-          }`}
-          title="Underline (Ctrl+U)"
-        >
-          <Underline size={18} />
-        </button>
-        <div className="w-px bg-gray-300 mx-1"></div>
-        <button
-          onClick={() => formatText("insertUnorderedList")}
-          className={`p-2 hover:bg-gray-200 rounded transition-colors ${
-            active.ul ? "bg-gray-300" : ""
-          }`}
-          title="Bullet List"
-        >
-          <List size={18} />
-        </button>
-        <button
-          onClick={() => insertLink()}
-          className="p-2 hover:bg-gray-200 rounded transition-colors"
-          title="Insert Link"
-        >
-          <Link size={18} />
-        </button>
-        <div className="w-px bg-gray-300 mx-1"></div>
-        <button
-          onClick={() => formatText("undo")}
-          className="p-2 hover:bg-gray-200 rounded transition-colors"
-          title="Undo (Ctrl+Z)"
-        >
-          <Undo size={18} />
-        </button>
-        <button
-          onClick={() => formatText("redo")}
-          className="p-2 hover:bg-gray-200 rounded transition-colors"
-          title="Redo (Ctrl+Y)"
-        >
-          <Redo size={18} />
-        </button>
+      <div className="flex flex-wrap gap-0.5 p-1.5 bg-[#fff7ed] border border-[#fde3c8] border-b-0 rounded-t-[var(--radius)]">
+        <Button type="button" variant={active.bold ? "secondary" : "ghost"} size="icon-sm" onClick={() => formatText("bold")} title="Bold (Ctrl+B)">
+          <Bold size={14} />
+        </Button>
+        <Button type="button" variant={active.italic ? "secondary" : "ghost"} size="icon-sm" onClick={() => formatText("italic")} title="Italic (Ctrl+I)">
+          <Italic size={14} />
+        </Button>
+        <Button type="button" variant={active.underline ? "secondary" : "ghost"} size="icon-sm" onClick={() => formatText("underline")} title="Underline (Ctrl+U)">
+          <Underline size={14} />
+        </Button>
+        <div className="w-px bg-[#fde3c8] mx-0.5 self-stretch"></div>
+        <Button type="button" variant={active.ul ? "secondary" : "ghost"} size="icon-sm" onClick={() => formatText("insertUnorderedList")} title="Bullet List">
+          <List size={14} />
+        </Button>
+        <Button type="button" variant="ghost" size="icon-sm" onClick={() => insertLink()} title="Insert Link">
+          <Link size={14} />
+        </Button>
+        <div className="w-px bg-[#fde3c8] mx-0.5 self-stretch"></div>
+        <Button type="button" variant="ghost" size="icon-sm" onClick={() => formatText("undo")} title="Undo (Ctrl+Z)">
+          <Undo size={14} />
+        </Button>
+        <Button type="button" variant="ghost" size="icon-sm" onClick={() => formatText("redo")} title="Redo (Ctrl+Y)">
+          <Redo size={14} />
+        </Button>
       </div>
 
       <div
         ref={editorRef}
         contentEditable
-        className={`editor border text-justify border-gray-300 rounded-b-lg p-3 min-h-[100px] ${
-          isFocused
-            ? "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-            : ""
-        }`}
+        className={`editor border text-justify border-[#fde3c8] rounded-b-[var(--radius)] p-3 min-h-[100px] outline-none transition-[border-color,box-shadow] ${isFocused ? "border-[#f97316] ring-2 ring-[#f97316]/20" : ""}`}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         onInput={handleInput}

@@ -179,12 +179,9 @@ const EducationStep = () => {
         </Card>
       ))}
 
-      <button
-        onClick={addEducation}
-        className="w-full py-3 rounded-lg border-2 border-dashed border-orange-300 text-orange-500 hover:bg-orange-50 font-medium"
-      >
-        + Add Another Education
-      </button>
+      <Button variant="outline" onClick={addEducation} className="w-full border-dashed">
+        <Plus className="h-4 w-4" /> Add Another Education
+      </Button>
 
       {resumeData.education.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">

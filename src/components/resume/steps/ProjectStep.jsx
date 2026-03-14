@@ -87,9 +87,9 @@ const ProjectStep = () => {
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
               <CardTitle className="text-sm font-semibold">Project #{index + 1}</CardTitle>
-              <button onClick={() => removeProject(proj.id)} className="text-muted-foreground hover:text-red-500 transition-colors">
+              <Button variant="ghost" size="icon-sm" onClick={() => removeProject(proj.id)} className="text-muted-foreground hover:text-red-500 hover:bg-red-50">
                 <Trash size={15} />
-              </button>
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -166,10 +166,9 @@ const ProjectStep = () => {
         </Card>
       ))}
 
-      <button onClick={addProject}
-        className="w-full py-3 rounded-lg border-2 border-dashed border-orange-300 text-orange-500 hover:bg-orange-50 font-medium text-sm transition-all">
-        + Add Another Project
-      </button>
+      <Button variant="outline" onClick={addProject} className="w-full border-dashed">
+        <Plus className="h-4 w-4" /> Add Another Project
+      </Button>
     </div>
   );
 };

@@ -3,7 +3,7 @@ import { TEMPLATES } from './templates';
 import { useContext } from "react";
 import { ResumeInfoContext } from "../../context/ResumeInfoContext";
 
-const ResumePreview = ({ selectedId = "modern" }) => {
+const ResumePreview = ({ selectedId = "modern", accentColor }) => {
   const { resumeData } = useContext(ResumeInfoContext);
   const SelectedTemplate = TEMPLATES[selectedId]?.component;
 
@@ -12,8 +12,8 @@ const ResumePreview = ({ selectedId = "modern" }) => {
   }
 
   return (
-    <div className="w-full h-full p-5 flex items-center justify-center bg-gray-100">
-      <SelectedTemplate data={resumeData} />
+    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+      <SelectedTemplate data={resumeData} accentColor={accentColor} />
     </div>
   );
 };

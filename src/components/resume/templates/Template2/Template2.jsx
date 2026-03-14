@@ -1,6 +1,6 @@
 import React from "react";
 
-const Template2 = ({ data }) => {
+const Template2 = ({ data, accentColor = "#f97316" }) => {
   const {
     firstName,
     lastName,
@@ -48,7 +48,7 @@ const Template2 = ({ data }) => {
           <div>
             <h2
               className="text-[9px] uppercase tracking-widest font-semibold mb-2"
-              style={{ color: "#f97316" }}
+              style={{ color: accentColor }}
             >
               Contact
             </h2>
@@ -69,7 +69,7 @@ const Template2 = ({ data }) => {
           <div>
             <h2
               className="text-[9px] uppercase tracking-widest font-semibold mb-2"
-              style={{ color: "#f97316" }}
+              style={{ color: accentColor }}
             >
               Skills
             </h2>
@@ -91,7 +91,7 @@ const Template2 = ({ data }) => {
                             <div
                               key={i}
                               className="flex-1 h-1 rounded-full"
-                              style={{ backgroundColor: i < filled ? "#f97316" : "#475569" }}
+                              style={{ backgroundColor: i < filled ? accentColor : "#475569" }}
                             />
                           ))}
                         </div>
@@ -108,7 +108,7 @@ const Template2 = ({ data }) => {
           <div>
             <h2
               className="text-[9px] uppercase tracking-widest font-semibold mb-2"
-              style={{ color: "#f97316" }}
+              style={{ color: accentColor }}
             >
               Education
             </h2>
@@ -139,7 +139,7 @@ const Template2 = ({ data }) => {
           <section>
             <h2
               className="text-[10px] uppercase tracking-widest font-bold mb-2 pb-1 border-b"
-              style={{ color: "#f97316", borderColor: "#fed7aa" }}
+              style={{ color: accentColor, borderColor: accentColor + "44" }}
             >
               Profile
             </h2>
@@ -155,7 +155,7 @@ const Template2 = ({ data }) => {
           <section>
             <h2
               className="text-[10px] uppercase tracking-widest font-bold mb-3 pb-1 border-b"
-              style={{ color: "#f97316", borderColor: "#fed7aa" }}
+              style={{ color: accentColor, borderColor: accentColor + "44" }}
             >
               Experience
             </h2>
@@ -169,7 +169,7 @@ const Template2 = ({ data }) => {
                       {exp.startDate} {exp.startDate && "–"} {exp.current ? "Present" : exp.endDate}
                     </span>
                   </div>
-                  <p className="text-[11px] font-medium" style={{ color: "#f97316" }}>
+                  <p className="text-[11px] font-medium" style={{ color: accentColor }}>
                     {exp.company}
                     {exp.location ? ` · ${exp.location}` : ""}
                   </p>
@@ -190,7 +190,7 @@ const Template2 = ({ data }) => {
           <section>
             <h2
               className="text-[10px] uppercase tracking-widest font-bold mb-3 pb-1 border-b"
-              style={{ color: "#f97316", borderColor: "#fed7aa" }}
+              style={{ color: accentColor, borderColor: accentColor + "44" }}
             >
               Projects
             </h2>
@@ -202,7 +202,7 @@ const Template2 = ({ data }) => {
                     <p className="font-bold text-[13px] text-gray-900">
                       {proj.title}
                       {proj.url && (
-                        <span className="text-[10px] font-normal ml-2" style={{ color: "#f97316" }}>
+                        <span className="text-[10px] font-normal ml-2" style={{ color: accentColor }}>
                           {proj.url}
                         </span>
                       )}

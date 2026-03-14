@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { ResumeInfoContext } from "../../../context/ResumeInfoContext";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
+import { Button } from "../../ui/button";
 import { Card, CardContent } from "../../ui/card";
 import {
   FolderGit2, Award, Languages, Heart, Plus, Trash,
@@ -131,12 +132,9 @@ const SectionPanel = ({ section }) => {
               <span className="text-xs font-medium text-muted-foreground">
                 {section.title} #{index + 1}
               </span>
-              <button
-                onClick={() => removeItem(item.id)}
-                className="text-muted-foreground hover:text-red-500 transition-colors"
-              >
+              <Button variant="ghost" size="icon-sm" onClick={() => removeItem(item.id)} className="text-muted-foreground hover:text-red-500 hover:bg-red-50 h-6 w-6">
                 <Trash size={13} />
-              </button>
+              </Button>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {section.fields.map((field) => (
@@ -176,12 +174,9 @@ const SectionPanel = ({ section }) => {
       ))}
 
       {/* Add button */}
-      <button
-        onClick={addItem}
-        className={`w-full py-2.5 rounded-lg border-2 border-dashed font-medium text-sm transition-all flex items-center justify-center gap-1.5 ${c.add}`}
-      >
+      <Button variant="outline" onClick={addItem} className="w-full border-dashed">
         <Plus size={14} /> Add {section.title}
-      </button>
+      </Button>
     </div>
   );
 };

@@ -219,13 +219,9 @@ const SkillsStep = () => {
                   placeholder="e.g. React, Python, Leadership"
                   className="flex-1 h-8 text-sm"
                 />
-                <button
-                  onClick={() => removeSkill(skill.id)}
-                  className="text-muted-foreground hover:text-red-500 transition-colors flex-shrink-0"
-                  title="Remove skill"
-                >
-                  <Trash size={14} />
-                </button>
+                <Button variant="ghost" size="icon-sm" onClick={() => removeSkill(skill.id)} title="Remove skill" className="text-muted-foreground hover:text-red-500 hover:bg-red-50 flex-shrink-0 h-6 w-6">
+                  <Trash size={13} />
+                </Button>
               </div>
 
               {!hideLevel && (
@@ -240,12 +236,9 @@ const SkillsStep = () => {
         ))}
       </div>
 
-      <button
-        onClick={() => addSkill()}
-        className="w-full py-3 rounded-lg border-2 border-dashed border-orange-300 text-orange-500 hover:bg-orange-50 font-medium text-sm transition-all"
-      >
-        + Add Another Skill
-      </button>
+      <Button variant="outline" onClick={() => addSkill()} className="w-full border-dashed">
+        <Plus className="h-4 w-4" /> Add Another Skill
+      </Button>
     </div>
   );
 };

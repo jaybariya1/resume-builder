@@ -71,9 +71,9 @@ const SummaryStep = () => {
         </div>
         <input type="text" value={resumeData.role || ""} onChange={(e) => handleInputChange("role", e.target.value)}
           placeholder="e.g. Senior Software Engineer"
-          className="w-full px-3 py-2 text-sm rounded-lg border border-border/60 bg-background focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-200 transition-all" />
+          className="w-full px-3 py-2 text-sm rounded-[var(--radius)] border border-[#fde3c8] bg-white focus:outline-none focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/20 transition-all" />
         {titleSuggestions.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="flex flex-wrap gap-1.5 p-3 bg-[#fff7ed] border border-[#fde3c8] rounded-[var(--radius)]">
             <p className="w-full text-xs font-medium text-orange-700 mb-1">Click a title to apply:</p>
             {titleSuggestions.map((title) => (
               <button key={title} onClick={() => { handleInputChange("role", title); setTitleSuggestions([]); }}
