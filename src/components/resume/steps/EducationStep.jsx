@@ -13,38 +13,21 @@ import { generateContent } from "../../../services/aiGenerator";
 
 
 const EducationStep = () => {
-  const { resumeData } = useContext(ResumeInfoContext);
-  const { setResumeData } = useContext(ResumeInfoContext);
-  const { setIsGenerating } = useContext(ResumeInfoContext);
+  const { resumeData, setResumeData, setIsGenerating } = useContext(ResumeInfoContext);
   const addEducation = () => {
-    const newEdu = {
-      id: Date.now().toString(),
-      degree: "",
-      school: "",
-      location: "",
-      graduationDate: "",
-      gpa: "",
-    };
-    setResumeData({
-      ...resumeData,
-      education: [...resumeData?.education, newEdu],
-    });
+    setResumeData((prev) => ({
+      ...prev,
+      education: [...(prev.education || []), {
+        id: Date.now().toString(),
+        degree: "", school: "", location: "", graduationDate: "", gpa: "",
+      }],
+    }));
   };
 
   useEffect(() => {
-    if (!resumeData) return null;
-    if (!Array.isArray(resumeData.education)) {
-      resumeData.education = [];
-    }
-    if (resumeData.education.length === 0) {
-      addEducation(); // Add a default education if none exists
-    }
+    if (!resumeData.education || resumeData.education.length === 0) addEducation();
   }, []);
 
-  // if (!resumeData) return null;
-  // if (!Array.isArray(resumeData.education)) {
-  //   resumeData.education = [];
-  // }
   // if (resumeData.education.length === 0) {
   //   addEducation(); // Add a default education if none exists
   // }
@@ -53,25 +36,24 @@ const EducationStep = () => {
   // }
 
   const updateEducation = (id, field, value) => {
-    setResumeData({
-      ...resumeData,
-      education: resumeData?.education.map((edu) =>
-        edu.id === id ? { ...edu, [field]: value } : edu
-      ),
-    });
+    setResumeData((prev) => ({
+      ...prev,
+      education: prev.education.map((edu) => edu.id === id ? { ...edu, [field]: value } : edu),
+    }));
   };
+
   const removeEducation = (id) => {
-    setResumeData({
-      ...resumeData,
-      education: resumeData?.education.filter((edu) => edu.id !== id),
-    });
+    setResumeData((prev) => ({
+      ...prev,
+      education: prev.education.filter((edu) => edu.id !== id),
+    }));
   };
 
   const handleDescriptionChange = (id, newDescription) => {
-    const updatedEducation = resumeData.education.map((edu) =>
-      edu.id === id ? { ...edu, description: newDescription } : edu
-    );
-    setResumeData({ ...resumeData, education: updatedEducation });
+    setResumeData((prev) => ({
+      ...prev,
+      education: prev.education.map((edu) => edu.id === id ? { ...edu, description: newDescription } : edu),
+    }));
   };
 
   const handleGenerate = async (id, type, input) => {

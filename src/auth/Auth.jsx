@@ -1,223 +1,102 @@
 import React, { useState } from "react";
-import { Button } from "../components/ui/button.jsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card.jsx";
-import { Input } from "../components/ui/input.jsx";
-import { Label } from "../components/ui/label.jsx";
-import { Separator } from "../components/ui/separator.jsx";
 import {
-  User,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  ArrowLeft,
-  Github,
-  Chrome,
-  Sparkles,
-  FileText,
-  Brain,
+  User, Mail, Lock, Eye, EyeOff, ArrowLeft,
+  Github, Chrome, Sparkles, FileText, Zap,
+  CheckCircle, ArrowRight,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { useNavigate } from "react-router-dom";
+
+const FEATURES = [
+  { icon: Sparkles,     text: "AI writes your bullets in seconds" },
+  { icon: FileText,     text: "5 professional templates included" },
+  { icon: Zap,          text: "ATS-optimized formatting built-in" },
+  { icon: CheckCircle,  text: "Download as pixel-perfect PDF" },
+];
+
+function ResumePreviewCard() {
+  return (
+    <div className="relative w-52 bg-white rounded-2xl shadow-2xl p-4 text-left flex-shrink-0">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">JD</div>
+        <div>
+          <div className="h-2 w-20 bg-gray-800 rounded-full" />
+          <div className="h-1.5 w-14 bg-orange-400 rounded-full mt-1" />
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <div className="h-1.5 w-full bg-gray-200 rounded-full" />
+        <div className="h-1.5 w-4/5 bg-gray-200 rounded-full" />
+        <div className="h-1.5 w-3/4 bg-gray-200 rounded-full" />
+      </div>
+      <div className="mt-3 pt-2 border-t border-gray-100 space-y-1">
+        <div className="h-1.5 w-1/3 bg-orange-300 rounded-full" />
+        <div className="h-1.5 w-full bg-gray-100 rounded-full" />
+        <div className="h-1.5 w-5/6 bg-gray-100 rounded-full" />
+        <div className="h-1.5 w-4/5 bg-gray-100 rounded-full" />
+      </div>
+      <div className="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+        <Sparkles className="w-2.5 h-2.5" /> AI
+      </div>
+    </div>
+  );
+}
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState({});
+  const [signUpSuccess, setSignUpSuccess] = useState(false);
   const navigate = useNavigate();
 
   const updateFormData = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: "" }));
   };
 
   const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
+    const e = {};
+    if (!formData.email) e.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = "Enter a valid email";
+    if (!formData.password) e.password = "Password is required";
+    else if (formData.password.length < 6) e.password = "At least 6 characters";
     if (isSignUp) {
-      if (!formData.name) {
-        newErrors.name = "Name is required";
-      }
-      if (!formData.confirmPassword) {
-        newErrors.confirmPassword = "Please confirm your password";
-      } else if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = "Passwords do not match";
-      }
+      if (!formData.name) e.name = "Name is required";
+      if (!formData.confirmPassword) e.confirmPassword = "Please confirm your password";
+      else if (formData.password !== formData.confirmPassword) e.confirmPassword = "Passwords don't match";
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   if (!validateForm()) return;
-
-  //   setIsLoading(true);
-
-  //   try {
-  //     const { projectId, publicAnonKey } = await import("../utils/supabase/info");
-  //     const endpoint = isSignUp ? "signup" : "signin";
-  //     const url = `https://${projectId}.supabase.co/functions/v1/make-server-5adc57a2/auth/${endpoint}`;
-
-  //     const payload = isSignUp
-  //       ? { email: formData.email, password: formData.password, name: formData.name }
-  //       : { email: formData.email, password: formData.password };
-
-  //     const response = await fetch(url, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         "Authorization": `Bearer ${publicAnonKey}`,
-  //       },
-  //       body: JSON.stringify(payload),
-  //     });
-
-  //     const data = await response.json();
-
-  //     if (!response.ok) {
-  //       throw new Error(data.error || "Authentication failed");
-  //     }
-
-  //     console.log(`${isSignUp ? "Sign up" : "Sign in"} successful:`, data);
-
-  //     if (!isSignUp && data.session) {
-  //       localStorage.setItem("auth_session", JSON.stringify(data.session));
-  //       localStorage.setItem("auth_user", JSON.stringify(data.user));
-  //     }
-
-  //     onAuthSuccess();
-  //   } catch (error) {
-  //     console.error("Auth error:", error);
-  //     setErrors({ general: error instanceof Error ? error.message : "Authentication failed. Please try again." });
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async (evt) => {
+    evt.preventDefault();
     if (!validateForm()) return;
-
     setIsLoading(true);
-
     try {
-      // const { projectId, publicAnonKey } = await import(
-      //   "../utils/supabase/info"
-      // );
-      // const functionName = "make-server-5adc57a2";
-      // const endpoint = isSignUp ? "signup" : "signin";
-      // // const url = `https://${projectId}.supabase.co/functions/v1/make-server-5adc57a2/auth/${endpoint}`;
-      // const url = `https://${projectId}.supabase.co/functions/v1/${functionName}/auth/${endpoint}`;
-
-      // const endpoint = isSignUp ? "signup" : "token?grant_type=password";
-      // const url = `https://${projectId}.supabase.co/auth/v1/${endpoint}`;
-
-      // console.log("Calling URL:", url);
-      // const payload = isSignUp
-      //   ? {
-      //       email: formData.email,
-      //       password: formData.password,
-      //       name: formData.name,
-      //     }
-      //   : { email: formData.email, password: formData.password };
-
-      // const response = await fetch(url, {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Authorization: `Bearer ${publicAnonKey}`,
-      //   },
-      //   body: JSON.stringify(payload),
-      // });
-
-      // // Check if the response is ok first
-      // if (!response.ok) {
-      //   // Read the response as text to see the server's error message
-      //   const errorText = await response.text();
-      //   let errorMessage = "Authentication failed. Please try again.";
-
-      //   // Try to parse as JSON in case it's a valid JSON error payload
-      //   try {
-      //     const errorData = JSON.parse(errorText);
-      //     errorMessage = errorData.error || errorMessage;
-      //   } catch (jsonError) {
-      //     // If parsing fails, use the raw text as the error message
-      //     console.error("Server response was not valid JSON:", errorText);
-      //     errorMessage = `Server error: ${errorText.substring(0, 100)}...`; // Truncate long messages
-      //   }
-
-      //   throw new Error(errorMessage);
-      // }
-
-      // If the response is ok, proceed to parse it as JSON
-      // const data = await response.json();
-
-      const email = formData.email;
-      const password = formData.password;
-
       let data, error;
-
       if (isSignUp) {
-        // 👇 Sign up new user
         ({ data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { name: formData.name }, // optional: store name in metadata
-          },
+          email: formData.email,
+          password: formData.password,
+          options: { data: { name: formData.name } },
         }));
       } else {
-        // 👇 Sign in existing user
         ({ data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: formData.email,
+          password: formData.password,
         }));
       }
-
       if (error) throw error;
-
-      console.log(`${isSignUp ? "Sign up" : "Sign in"} successful:`, data);
-
-      if (!isSignUp && data.session) {
-        localStorage.setItem("auth_session", JSON.stringify(data.session));
-        localStorage.setItem("auth_user", JSON.stringify(data.user));
+      if (isSignUp) {
+        data.session ? navigate("/dashboard") : setSignUpSuccess(true);
+      } else {
+        if (data.session) navigate("/dashboard");
       }
-
-      if (data.session) {
-        navigate('/dashboard');
-      }
-    } catch (error) {
-      console.error("Auth error:", error);
-      setErrors({
-        general:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred.",
-      });
+    } catch (err) {
+      setErrors({ general: err.message || "Something went wrong." });
     } finally {
       setIsLoading(false);
     }
@@ -226,292 +105,321 @@ export default function Auth() {
   const handleSocialAuth = async (provider) => {
     setIsLoading(true);
     try {
-      const { createClient } = await import("@supabase/supabase-js");
-      const { projectId, publicAnonKey } = await import(
-        "../utils/supabase/info.js"
-      );
-
-      const supabase = createClient(
-        `https://${projectId}.supabase.co`,
-        publicAnonKey
-      );
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: provider,
-        options: {
-          redirectTo: window.location.origin,
-        },
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/dashboard` },
       });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      console.log(`${provider} auth initiated:`, data);
-    } catch (error) {
-      console.error(`${provider} auth error:`, error);
-      setErrors({
-        general: `${provider} authentication failed. Please complete the setup at https://supabase.com/docs/guides/auth/social-login/auth-${provider} or try email authentication.`,
-      });
+      if (error) throw error;
+    } catch (err) {
+      setErrors({ general: `${provider} sign-in failed: ${err.message}` });
       setIsLoading(false);
     }
   };
 
-  
+  const switchMode = () => {
+    setIsSignUp(v => !v);
+    setFormData({ name: "", email: "", password: "", confirmPassword: "" });
+    setErrors({});
+  };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
-      {/* Navigation Header */}
-      <div className="border-b bg-card/80 backdrop-blur">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/')}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Home
-            </Button>
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-orange-600" />
-              <span className="font-semibold">AI Resume Builder</span>
-            </div>
+  if (signUpSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center border border-orange-100">
+          <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <Sparkles className="w-9 h-9 text-white" />
           </div>
+          <h2 className="text-2xl font-bold text-foreground mb-3">Check your inbox!</h2>
+          <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+            We sent a confirmation link to{" "}
+            <span className="font-semibold text-orange-600">{formData.email}</span>.
+            Click it to activate your account.
+          </p>
+          <button
+            onClick={() => { setSignUpSuccess(false); setIsSignUp(false); }}
+            className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all"
+          >
+            Back to Sign In <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
+    );
+  }
 
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-md mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Brain className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">
-              {isSignUp ? "Create Account" : "Welcome Back"}
+  return (
+    <div className="min-h-screen flex">
+
+      {/* LEFT PANEL */}
+      <div
+        className="hidden lg:flex lg:w-[48%] relative flex-col justify-between p-12 overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #1c0f0a 0%, #3b1207 40%, #7c2d12 100%)" }}
+      >
+        {/* Decorative blobs */}
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10 pointer-events-none"
+          style={{ background: "radial-gradient(circle, #f97316, transparent)", transform: "translate(30%, -30%)" }} />
+        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-10 pointer-events-none"
+          style={{ background: "radial-gradient(circle, #fb923c, transparent)", transform: "translate(-30%, 30%)" }} />
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #f97316 1px, transparent 0)", backgroundSize: "32px 32px" }} />
+
+        {/* Logo */}
+        <button onClick={() => navigate("/")} className="flex items-center gap-2.5 group w-fit">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+            <Zap className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-white font-bold text-lg tracking-tight">AI Resume Builder</span>
+        </button>
+
+        {/* Headline + features */}
+        <div className="space-y-8">
+          <div>
+            <h1 className="text-4xl font-bold text-white leading-tight mb-4">
+              Land your dream job
+              <span className="block text-orange-400">faster than ever.</span>
             </h1>
-            <p className="text-muted-foreground">
-              {isSignUp
-                ? "Start building professional resumes with AI assistance"
-                : "Sign in to continue building amazing resumes"}
+            <p className="text-orange-200/70 text-sm leading-relaxed max-w-xs">
+              Our AI crafts compelling, ATS-optimized resumes tailored to each role — so recruiters notice you first.
             </p>
           </div>
 
-          <Card className="border-orange-200 shadow-lg">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">
-                {isSignUp ? "Sign Up" : "Sign In"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Social Auth Buttons */}
-              <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleSocialAuth("google")}
-                  disabled={isLoading}
-                >
-                  <Chrome className="w-4 h-4 mr-2" />
-                  Continue with Google
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleSocialAuth("github")}
-                  disabled={isLoading}
-                >
-                  <Github className="w-4 h-4 mr-2" />
-                  Continue with GitHub
-                </Button>
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
+          <div className="space-y-3">
+            {FEATURES.map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-3.5 h-3.5 text-orange-400" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
-                    Or continue with
-                  </span>
-                </div>
+                <span className="text-orange-100/80 text-sm">{text}</span>
               </div>
+            ))}
+          </div>
 
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {errors.general && (
-                  <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-                    {errors.general}
-                  </div>
-                )}
+          {/* Preview card */}
+          <div className="flex items-end gap-4">
+            <ResumePreviewCard />
+            <div className="pb-2 space-y-1">
+              <div className="text-orange-400 text-xs font-semibold uppercase tracking-widest">Live preview</div>
+              <div className="text-orange-100/60 text-xs max-w-[100px] leading-relaxed">Edit and see changes instantly</div>
+            </div>
+          </div>
+        </div>
 
-                {isSignUp && (
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="John Doe"
-                        value={formData.name}
-                        onChange={(e) => updateFormData("name", e.target.value)}
-                        className="pl-10"
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {errors.name && (
-                      <p className="text-sm text-red-600">{errors.name}</p>
-                    )}
-                  </div>
-                )}
+        {/* Social proof */}
+        <div className="flex items-center gap-3">
+          <div className="flex -space-x-2">
+            {["#f97316","#fb923c","#fdba74","#fcd34d"].map((c, i) => (
+              <div key={i} className="w-7 h-7 rounded-full border-2 border-[#3b1207] flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
+                style={{ background: c }}>
+                {String.fromCharCode(65 + i * 3)}
+              </div>
+            ))}
+          </div>
+          <p className="text-orange-200/60 text-xs">Join thousands building standout resumes</p>
+        </div>
+      </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+      {/* RIGHT PANEL */}
+      <div className="flex-1 flex flex-col bg-[#fffbf7]">
+
+        {/* Mobile top bar */}
+        <div className="lg:hidden flex items-center justify-between px-6 py-4 border-b border-orange-100">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+              <Zap className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-bold text-sm text-foreground">AI Resume Builder</span>
+          </button>
+          <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Home
+          </button>
+        </div>
+
+        {/* Form */}
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
+          <div className="w-full max-w-md">
+
+            {/* Desktop back */}
+            <button
+              onClick={() => navigate("/")}
+              className="hidden lg:flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to home
+            </button>
+
+            {/* Heading */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-foreground mb-1.5">
+                {isSignUp ? "Create account" : "Welcome back"}
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                {isSignUp
+                  ? "Start building AI-powered resumes for free"
+                  : "Sign in to continue to your dashboard"}
+              </p>
+            </div>
+
+            {/* Social buttons */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {[
+                { provider: "google", label: "Google", icon: Chrome },
+                { provider: "github", label: "GitHub", icon: Github },
+              ].map(({ provider, label, icon: Icon }) => (
+                <button
+                  key={provider}
+                  onClick={() => handleSocialAuth(provider)}
+                  disabled={isLoading}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-orange-200 bg-white text-sm font-medium text-foreground hover:bg-orange-50 hover:border-orange-300 transition-all disabled:opacity-50 shadow-sm"
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Divider */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-orange-100" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-[#fffbf7] px-3 text-xs text-muted-foreground">or continue with email</span>
+              </div>
+            </div>
+
+            {/* Error */}
+            {errors.general && (
+              <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-600">
+                {errors.general}
+              </div>
+            )}
+
+            {/* Form fields */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {isSignUp && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Full name</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="john@example.com"
-                      value={formData.email}
-                      onChange={(e) => updateFormData("email", e.target.value)}
-                      className="pl-10"
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-300 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Jane Smith"
+                      value={formData.name}
+                      onChange={e => updateFormData("name", e.target.value)}
                       disabled={isLoading}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-orange-200 bg-white text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
                     />
                   </div>
-                  {errors.email && (
-                    <p className="text-sm text-red-600">{errors.email}</p>
-                  )}
+                  {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={formData.password}
-                      onChange={(e) =>
-                        updateFormData("password", e.target.value)
-                      }
-                      className="pl-10 pr-10"
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <p className="text-sm text-red-600">{errors.password}</p>
-                  )}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Email address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-300 pointer-events-none" />
+                  <input
+                    type="email"
+                    placeholder="jane@example.com"
+                    value={formData.email}
+                    onChange={e => updateFormData("email", e.target.value)}
+                    disabled={isLoading}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-orange-200 bg-white text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+                  />
                 </div>
+                {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+              </div>
 
-                {isSignUp && (
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="Confirm your password"
-                        value={formData.confirmPassword}
-                        onChange={(e) =>
-                          updateFormData("confirmPassword", e.target.value)
-                        }
-                        className="pl-10"
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {errors.confirmPassword && (
-                      <p className="text-sm text-red-600">
-                        {errors.confirmPassword}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      {isSignUp ? "Creating account..." : "Signing in..."}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" />
-                      {isSignUp ? "Create Account" : "Sign In"}
-                    </div>
-                  )}
-                </Button>
-              </form>
-
-              {/* Toggle between Sign Up and Sign In */}
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  {isSignUp
-                    ? "Already have an account?"
-                    : "Don't have an account?"}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-300 pointer-events-none" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder={isSignUp ? "Min. 6 characters" : "Your password"}
+                    value={formData.password}
+                    onChange={e => updateFormData("password", e.target.value)}
+                    disabled={isLoading}
+                    className="w-full pl-10 pr-11 py-2.5 rounded-xl border border-orange-200 bg-white text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+                  />
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsSignUp(!isSignUp);
-                      setFormData({
-                        name: "",
-                        email: "",
-                        password: "",
-                        confirmPassword: "",
-                      });
-                      setErrors({});
-                    }}
-                    className="ml-1 text-orange-600 hover:text-orange-700 font-medium"
-                    disabled={isLoading}
+                    onClick={() => setShowPassword(v => !v)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-orange-300 hover:text-orange-500 transition-colors"
                   >
-                    {isSignUp ? "Sign in" : "Sign up"}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
-                </p>
+                </div>
+                {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
               </div>
 
               {isSignUp && (
-                <div className="pt-4 border-t">
-                  <p className="text-sm text-muted-foreground text-center mb-3">
-                    What you'll get:
-                  </p>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-                      AI-powered resume optimization
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-                      Professional templates
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-                      ATS-friendly formatting
-                    </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Confirm password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-300 pointer-events-none" />
+                    <input
+                      type="password"
+                      placeholder="Same as above"
+                      value={formData.confirmPassword}
+                      onChange={e => updateFormData("confirmPassword", e.target.value)}
+                      disabled={isLoading}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-orange-200 bg-white text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+                    />
                   </div>
+                  {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>}
                 </div>
               )}
-            </CardContent>
-          </Card>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold shadow-md hover:shadow-lg hover:from-orange-600 hover:to-red-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    {isSignUp ? "Creating account…" : "Signing in…"}
+                  </>
+                ) : (
+                  <>
+                    {isSignUp ? "Create account" : "Sign in"}
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Toggle mode */}
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+              <button
+                onClick={switchMode}
+                disabled={isLoading}
+                className="font-semibold text-orange-600 hover:text-orange-700 transition-colors"
+              >
+                {isSignUp ? "Sign in" : "Sign up free"}
+              </button>
+            </p>
+
+            {/* Sign-up perks */}
+            {isSignUp && (
+              <div className="mt-6 pt-5 border-t border-orange-100">
+                <p className="text-xs text-center text-muted-foreground mb-3 font-medium">What you get for free</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { icon: Sparkles, label: "AI Writing" },
+                    { icon: FileText, label: "5 Templates" },
+                    { icon: Zap,      label: "PDF Export" },
+                  ].map(({ icon: Icon, label }) => (
+                    <div key={label} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-orange-50 border border-orange-100">
+                      <Icon className="w-4 h-4 text-orange-500" />
+                      <span className="text-[11px] font-medium text-foreground text-center leading-tight">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </div>
         </div>
       </div>
     </div>

@@ -14,13 +14,13 @@ const ExperienceStep = () => {
   const [improvingId, setImprovingId] = useState(null);
 
   const addExperience = () => {
-    setResumeData({
-      ...resumeData,
-      experience: [...(resumeData?.experience || []), {
+    setResumeData((prev) => ({
+      ...prev,
+      experience: [...(prev.experience || []), {
         id: Date.now().toString(), title: "", company: "", location: "",
         startDate: "", endDate: "", current: false, description: "",
       }],
-    });
+    }));
   };
 
   useEffect(() => {
@@ -28,14 +28,17 @@ const ExperienceStep = () => {
   }, []);
 
   const updateExperience = (id, field, value) => {
-    setResumeData({
-      ...resumeData,
-      experience: resumeData.experience.map((exp) => exp.id === id ? { ...exp, [field]: value } : exp),
-    });
+    setResumeData((prev) => ({
+      ...prev,
+      experience: prev.experience.map((exp) => exp.id === id ? { ...exp, [field]: value } : exp),
+    }));
   };
 
   const removeExperience = (id) => {
-    setResumeData({ ...resumeData, experience: resumeData.experience.filter((exp) => exp.id !== id) });
+    setResumeData((prev) => ({
+      ...prev,
+      experience: prev.experience.filter((exp) => exp.id !== id),
+    }));
   };
 
   const handleGenerate = async (exp) => {

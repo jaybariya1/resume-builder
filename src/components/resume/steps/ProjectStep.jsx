@@ -14,14 +14,14 @@ const ProjectStep = () => {
   const [improvingId, setImprovingId] = useState(null);
 
   const addProject = () => {
-    setResumeData({
-      ...resumeData,
-      project: [...(resumeData?.project || []), {
+    setResumeData((prev) => ({
+      ...prev,
+      project: [...(prev.project || []), {
         id: Date.now().toString(), title: "", url: "", organization: "",
         location: "", startDate: "", endDate: "", current: false,
         description: "", tech: "",
       }],
-    });
+    }));
   };
 
   useEffect(() => {
@@ -29,14 +29,17 @@ const ProjectStep = () => {
   }, []);
 
   const updateProject = (id, field, value) => {
-    setResumeData({
-      ...resumeData,
-      project: resumeData.project.map((p) => p.id === id ? { ...p, [field]: value } : p),
-    });
+    setResumeData((prev) => ({
+      ...prev,
+      project: prev.project.map((p) => p.id === id ? { ...p, [field]: value } : p),
+    }));
   };
 
   const removeProject = (id) => {
-    setResumeData({ ...resumeData, project: resumeData.project.filter((p) => p.id !== id) });
+    setResumeData((prev) => ({
+      ...prev,
+      project: prev.project.filter((p) => p.id !== id),
+    }));
   };
 
   const handleGenerate = async (proj) => {

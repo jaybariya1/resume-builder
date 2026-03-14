@@ -18,6 +18,7 @@ const Template1 = ({ data }) => {
     education = [],
     skills = [],
     project = [],
+    hideSkillLevel = false,
   } = data;
   const hasHeaderInfo =
     firstName || lastName || email || phone || location;
@@ -66,21 +67,34 @@ const Template1 = ({ data }) => {
       )}
 
       {/* ================= SKILLS ================= */}
-      {skills.length > 0 && (
+      {skills.filter(s => s.name).length > 0 && (
         <section className="mb-6">
           <h2 className="section-title text-[15px]">SKILLS</h2>
-
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2">
             {skills
               .filter(s => s.name)
-              .map(skill => (
-                <span
-                  key={skill.id}
-                  className="border px-2 py-1 rounded text-xs"
-                >
-                  {skill.name}
-                </span>
-              ))}
+              .map(skill => {
+                const levelLabel = ["Beginner", "Intermediate", "Advanced", "Expert"][skill.level ?? 2];
+                const filled = (skill.level ?? 2) + 1;
+                return (
+                  <div key={skill.id} className="flex flex-col gap-0.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium">{skill.name}</span>
+                      {!hideSkillLevel && <span className="text-[9px] text-gray-500">{levelLabel}</span>}
+                    </div>
+                    {!hideSkillLevel && (
+                      <div className="flex gap-0.5">
+                        {[0, 1, 2, 3].map(i => (
+                          <div
+                            key={i}
+                            className={`flex-1 h-1.5 rounded-full ${i < filled ? "bg-gray-800" : "bg-gray-200"}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
           </div>
         </section>
       )}

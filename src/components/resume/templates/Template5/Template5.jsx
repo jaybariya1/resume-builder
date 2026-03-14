@@ -209,6 +209,7 @@ const Template5 = ({ data }) => {
     education = [],
     skills = [],
     project = [],
+    hideSkillLevel = false,
   } = data;
 
   const fullName = [firstName, lastName].filter(Boolean).join(" ");
@@ -310,15 +311,28 @@ const Template5 = ({ data }) => {
       )}
 
       {/* ── OTHER / SKILLS ── */}
-      {skillNames.length > 0 && (
-        <Section title="Other">
+      {skills.filter(s => s.name).length > 0 && (
+        <Section title="Skills">
           <div style={{ paddingLeft: "102px" }}>
-            <ul style={S.bulletList}>
-              <li>
-                <span style={{ fontWeight: "normal" }}>Technical Skills: </span>
-                {skillNames.join(", ")}
-              </li>
-            </ul>
+            {skills.filter(s => s.name).map(skill => {
+              const filled = (skill.level ?? 2) + 1;
+              const levelLabel = ["Beginner", "Intermediate", "Advanced", "Expert"][skill.level ?? 2];
+              return (
+                <div key={skill.id} style={{ marginBottom: "4px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "11px", fontWeight: "500" }}>{skill.name}</span>
+                    {!hideSkillLevel && <span style={{ fontSize: "9px", color: "#6b7280" }}>{levelLabel}</span>}
+                  </div>
+                  {!hideSkillLevel && (
+                    <div style={{ display: "flex", gap: "2px", marginTop: "2px" }}>
+                      {[0,1,2,3].map(i => (
+                        <div key={i} style={{ flex: 1, height: "3px", borderRadius: "9999px", backgroundColor: i < filled ? "#1e293b" : "#e2e8f0" }} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </Section>
       )}

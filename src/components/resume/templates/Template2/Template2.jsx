@@ -17,6 +17,7 @@ const Template2 = ({ data }) => {
     education = [],
     skills = [],
     project = [],
+    hideSkillLevel = false,
   } = data;
 
   return (
@@ -72,18 +73,32 @@ const Template2 = ({ data }) => {
             >
               Skills
             </h2>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="space-y-2">
               {skills
                 .filter((s) => s.name)
-                .map((skill) => (
-                  <span
-                    key={skill.id}
-                    className="text-[10px] px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: "#334155", color: "#e2e8f0" }}
-                  >
-                    {skill.name}
-                  </span>
-                ))}
+                .map((skill) => {
+                  const filled = (skill.level ?? 2) + 1;
+                  const levelLabel = ["Beginner", "Intermediate", "Advanced", "Expert"][skill.level ?? 2];
+                  return (
+                    <div key={skill.id}>
+                      <div className="flex justify-between items-center mb-0.5">
+                        <span className="text-[10px] font-medium" style={{ color: "#e2e8f0" }}>{skill.name}</span>
+                        {!hideSkillLevel && <span className="text-[8px]" style={{ color: "#94a3b8" }}>{levelLabel}</span>}
+                      </div>
+                      {!hideSkillLevel && (
+                        <div className="flex gap-0.5">
+                          {[0, 1, 2, 3].map(i => (
+                            <div
+                              key={i}
+                              className="flex-1 h-1 rounded-full"
+                              style={{ backgroundColor: i < filled ? "#f97316" : "#475569" }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           </div>
         )}

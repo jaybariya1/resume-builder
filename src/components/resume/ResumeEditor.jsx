@@ -12,14 +12,11 @@ import ProjectStep from "./steps/ProjectStep";
 import AdditionalStep from "./steps/AdditionalStep";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { LayoutDashboard, Briefcase, GraduationCap, Home, Download, Eye, User, Award, Plus } from "lucide-react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { LayoutDashboard, Briefcase, GraduationCap, Home, Download, Eye, User, Award, Plus, FolderGit2, FileText } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { debounce, isEqual } from "lodash";
 import GeneratingOverlay from "./GeneratingOverlay";
 import TemplatePicker from "./TemplatePicker";
-import { FileText } from "lucide-react";
 
 
 
@@ -29,7 +26,6 @@ export default function ResumeEditor({ mode}) {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [value, setValue] = useState();
   const [selectedId, setSelectedId] = useState("modern");
-  // const SelectedTemplate = TEMPLATES[selectedId].component;
   const navigate = useNavigate();
   const { resumeData, setResumeData, saveResume, loadResumeById } =
     useContext(ResumeInfoContext);
@@ -50,7 +46,8 @@ export default function ResumeEditor({ mode}) {
     { id: 2, title: "Experience", icon: Briefcase },
     { id: 3, title: "Education", icon: GraduationCap },
     { id: 4, title: "Skills", icon: Award },
-    { id: 5, title: "Additional Sections", icon: Plus },
+    { id: 5, title: "Project", icon: FolderGit2 },
+    { id: 6, title: "Additional Sections", icon: Plus },
   ]);
 
   useEffect(() => {
@@ -85,30 +82,8 @@ export default function ResumeEditor({ mode}) {
     }
   }, [mode, id]);
 
-  // 🔹 Auto-save to DB after typing stops
-  // useEffect(() => {
-  //   if (!resumeData || Object.keys(resumeData).length === 0) return;
-
-  //   const timer = setTimeout(() => {
-
-  //     if (mode === "edit") {
-  //       saveResume(mode, resumeId);
-  //     } else if (mode === "create") {
-  //       saveResume(mode, null);
-  //     }
-  //   }, 1500);
-  //   return () => clearTimeout(timer);
-  // }, [resumeData]);
-
 const isSaving = useRef(false);
 
-
-
-  // ... inside ResumeEditor component ...
-
-// 1. Reference to track the actual data persisted in DB
-
-// 2. The Save Function
 const saveToDatabase = async (currentData) => {
   // If data is null or exactly the same as what we last saved, STOP.
   if (isSaving.current) {
@@ -139,35 +114,30 @@ const saveToDatabase = async (currentData) => {
     }
     // CRITICAL: Update the reference with the data we JUST saved
     lastSavedVersion.current = JSON.parse(JSON.stringify(currentData));
-    setSaveStatus('Saved');
+    setSaveStatus("Saved");
   } catch (error) {
     console.error("Autosave error:", error);
-    setSaveStatus('Error');
+    setSaveStatus("Error");
   } finally {
-    isSaving.current = false; // UNLOCK: Allow the next save to happens
+    isSaving.current = false;
   }
 };
 
-// 3. The Debouncer (Stable)
 const debouncedSave = useCallback(
   debounce((data) => saveToDatabase(data), 1500),
-  [mode, id] // Only recreate if mode or ID changes
+  [mode, id]
 );
 
-// 4. The Watcher Effect
 useEffect(() => {
   // Logic to handle the first time data is loaded from Supabase
   if (resumeData && Object.keys(resumeData).length > 0) {
     
-    // If this is the very first time we get data (loading from DB),
-    // set it as our "base" version and don't save.
     if (isInitialMount.current) {
       lastSavedVersion.current = JSON.parse(JSON.stringify(resumeData));
       isInitialMount.current = false;
       return;
     }
 
-    // Check if the data is actually different from our last save
     if (!isEqual(resumeData, lastSavedVersion.current)) {
       setSaveStatus('Typing...');
       debouncedSave(resumeData);
@@ -175,7 +145,6 @@ useEffect(() => {
   }
 }, [resumeData, debouncedSave]);
 
-// 5. Clean up debounce on unmount
 useEffect(() => {
   return () => debouncedSave.cancel();
 }, [debouncedSave]);
@@ -184,7 +153,6 @@ useEffect(() => {
 
 
   const handleNavigateAway = async (path) => {
-    // await saveResume(mode, mode === "edit" ? resumeId : null);
     navigate(path);
   };
 
@@ -203,34 +171,107 @@ useEffect(() => {
   }, [resumeData]);
 
   const downloadPDF = () => {
-    // 1. Target the div that contains the resume
-    const element = document.getElementById("resume-preview-id");
+    const element = document.getElementById("resume-preview");
+    if (!element) {
+      console.error("Resume preview element not found");
+      return;
+    }
 
-    // 2. Options for high quality
-    const options = {
-      scale: 2, // Increases resolution
-      useCORS: true, // Helps with images/icons
-      logging: false,
+    // Collect all stylesheets so Tailwind renders identically in the print window
+    const styleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .map((l) => `<link rel="stylesheet" href="${l.href}" />`)
+      .join("\n");
+
+    const inlineStyles = Array.from(document.styleSheets)
+      .map((sheet) => {
+        try {
+          return Array.from(sheet.cssRules).map((r) => r.cssText).join("\n");
+        } catch {
+          return ""; // skip cross-origin sheets (already linked above)
+        }
+      })
+      .join("\n");
+
+    const name = (resumeData.firstName || resumeData.lastName)
+      ? `${resumeData.firstName || ""}-${resumeData.lastName || ""}-resume`
+          .replace(/^-|-$/g, "").replace(/--+/g, "-")
+      : "my-resume";
+
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=794" />
+  <title>${name}</title>
+  ${styleLinks}
+  <style>
+    ${inlineStyles}
+
+    /* Force colors to print exactly as shown */
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    html {
+      margin: 0;
+      padding: 0;
+      background: white;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: white;
+      /* The resume is 794px wide — set the body to match so the browser
+         treats it as one A4-width "page" with no extra whitespace */
+      width: 794px;
+    }
+
+    /* Remove any wrapper padding/bg the preview adds */
+    #resume-preview {
+      margin: 0 !important;
+      box-shadow: none !important;
+    }
+
+    @media print {
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 794px;
+      }
+
+      /* A4 at 96dpi = 794 x 1123px. margin:0 removes browser header/footer. */
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+
+      #resume-preview {
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  ${element.outerHTML}
+  <script>
+    // Trigger print once all assets (fonts, images) are loaded
+    window.onload = function () {
+      setTimeout(function () {
+        window.print();
+        window.close();
+      }, 800);
     };
+  </script>
+</body>
+</html>`);
 
-    html2canvas(element, options).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png");
-
-      // 3. Create PDF (A4 size)
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const imgWidth = 210; // A4 width in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-
-      // 4. THE DIRECT DOWNLOAD
-      pdf.save("my-resume.pdf");
-    });
+    printWindow.document.close();
   };
 
   const renderStepContent = () => {
@@ -248,14 +289,7 @@ useEffect(() => {
       case "Project":
         return <ProjectStep />;
       case "Additional Sections":
-        return (
-          <AdditionalStep
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-            steps={steps}
-            setSteps={setSteps}
-          />
-        );
+        return <AdditionalStep />;
       default:
         return <PersonalInfoStep />;
     }
@@ -436,7 +470,7 @@ useEffect(() => {
                       Next
                     </Button>
                   ) : (
-                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
+                    <Button onClick={downloadPDF} className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
                       <Download className="w-4 h-4 mr-2" />
                       Download Resume
                     </Button>
@@ -456,20 +490,6 @@ useEffect(() => {
                 } hide-scrollbar min-h-0`}
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
-                {/* <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Live Preview</h3>
-                  <aside>
-        {Object.values(TEMPLATES).map(t => (
-          // <button key={t.id} onClick={() => setSelectedId(t.id)}>
-          //   Select {t.name}
-          // </button>
-                  <Button key={t.id} onClick={() => setSelectedId(t.id)} variant="outline" size="sm">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Template
-                  </Button>
-        ))}
-      </aside>
-                </div> */}
                 <div className="bg-white shadow-lg">
                   <div id="resume-preview-id">
                     <ResumePreview selectedId={selectedId} />

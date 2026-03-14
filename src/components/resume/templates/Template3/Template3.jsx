@@ -17,6 +17,7 @@ const Template3 = ({ data }) => {
     education = [],
     skills = [],
     project = [],
+    hideSkillLevel = false,
   } = data;
 
   const SectionTitle = ({ children }) => (
@@ -173,9 +174,27 @@ const Template3 = ({ data }) => {
       {skills.filter((s) => s.name).length > 0 && (
         <>
           <SectionTitle>Skills</SectionTitle>
-          <p className="text-gray-700">
-            {skills.filter((s) => s.name).map((s) => s.name).join("  ·  ")}
-          </p>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+            {skills.filter((s) => s.name).map((skill) => {
+              const filled = (skill.level ?? 2) + 1;
+              const levelLabel = ["Beginner", "Intermediate", "Advanced", "Expert"][skill.level ?? 2];
+              return (
+                <div key={skill.id}>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-medium text-gray-800">{skill.name}</span>
+                    {!hideSkillLevel && <span className="text-[9px] text-gray-500">{levelLabel}</span>}
+                  </div>
+                  {!hideSkillLevel && (
+                    <div className="flex gap-0.5 mt-0.5">
+                      {[0,1,2,3].map(i => (
+                        <div key={i} className="flex-1 h-1 rounded-full" style={{ backgroundColor: i < filled ? "#7c3aed" : "#e9d5ff" }} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </>
       )}
     </main>

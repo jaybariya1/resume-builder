@@ -31,6 +31,11 @@ export const ResumeInfoProvider = ({ children }) => {
     education: [],
     skills: [],
     project: [],
+    hideSkillLevel: false,
+    certifications: [],
+    languages: [],
+    volunteer: [],
+    awards: [],
   });
 
   const [inputFields, setInputFields] = useState({
