@@ -20,6 +20,9 @@ const Template1 = ({ data }) => {
     skills = [],
     project = [],
     hideSkillLevel = false,
+    fontFamily,
+    fontSize,
+    sectionTitles = {},
   } = data;
 
   const fullLocation = location || [city, country].filter(Boolean).join(", ");
@@ -35,17 +38,17 @@ const Template1 = ({ data }) => {
     <main
       id="resume-preview"
       className="w-[794px] min-h-[1123px] mx-auto bg-white text-black flex flex-col"
-      style={{ fontFamily: "'Arial', 'Helvetica Neue', sans-serif" }}
+      style={{ fontFamily: fontFamily || "'Arial', 'Helvetica Neue', sans-serif", fontSize: fontSize ? `${fontSize}px` : '12px' }}
     >
       {/* ── HEADER ──────────────────────────────────────────── */}
       <header className="px-18 pt-12 pb-0 text-center">
         {hasName && (
-          <h1 className="text-[38px] font-black tracking-[0.14em] uppercase text-black leading-none mb-1.5">
+          <h1 className="text-[3.1667em] font-black tracking-[0.14em] uppercase text-black leading-none mb-1.5">
             {firstName} {lastName}
           </h1>
         )}
         {role && (
-          <p className="text-[12.5px] font-normal tracking-[0.06em] text-black mb-5">
+          <p className="text-[1.0417em] font-normal tracking-[0.06em] text-black mb-5">
             {role}
           </p>
         )}
@@ -55,7 +58,7 @@ const Template1 = ({ data }) => {
 
         {/* Contact row */}
         {hasContact && (
-          <div className="flex items-center justify-center gap-8 text-[11px] text-black mb-4">
+          <div className="flex items-center justify-center gap-8 text-[0.9167em] text-black mb-4">
             {phone && (
               <span className="flex items-center gap-1.5">
                 <Phone size={10} strokeWidth={2.5} />
@@ -105,9 +108,9 @@ const Template1 = ({ data }) => {
         {/* ── ABOUT ME ── */}
         {summary && (
           <section className="mb-5">
-            <SectionTitle>About Me</SectionTitle>
+            <SectionTitle>{sectionTitles[1] || "About Me"}</SectionTitle>
             <div
-              className="text-[11.5px] leading-[1.7] text-black preview"
+              className="text-[0.9583em] leading-[1.7] text-black preview"
               dangerouslySetInnerHTML={{ __html: summary }}
             />
           </section>
@@ -116,19 +119,19 @@ const Template1 = ({ data }) => {
         {/* ── EDUCATION ── */}
         {education.filter(e => e.degree || e.school).length > 0 && (
           <section className="mb-5">
-            <SectionTitle>Education</SectionTitle>
+            <SectionTitle>{sectionTitles[3] || "Education"}</SectionTitle>
             <div className="space-y-4">
               {education.map((edu) => {
                 if (!edu.degree && !edu.school) return null;
                 return (
                   <div key={edu.id}>
-                    <p className="text-[10.5px] text-black/60 mb-0.5 tracking-wide">
+                    <p className="text-[0.875em] text-black/60 mb-0.5 tracking-wide">
                       {[edu.school, edu.graduationDate || edu.startDate].filter(Boolean).join(" | ")}
                     </p>
-                    <p className="text-[12px] font-bold text-black">{edu.degree}</p>
+                    <p className="text-[1.0em] font-bold text-black">{edu.degree}</p>
                     {edu.description && (
                       <div
-                        className="mt-1 text-[11.5px] leading-[1.65] text-black preview"
+                        className="mt-1 text-[0.9583em] leading-[1.65] text-black preview"
                         dangerouslySetInnerHTML={{ __html: edu.description }}
                       />
                     )}
@@ -142,7 +145,7 @@ const Template1 = ({ data }) => {
         {/* ── WORK EXPERIENCE ── */}
         {experience.filter(e => e.title || e.company).length > 0 && (
           <section className="mb-5">
-            <SectionTitle>Work Experience</SectionTitle>
+            <SectionTitle>{sectionTitles[2] || "Work Experience"}</SectionTitle>
             <div className="space-y-4">
               {experience.map((exp) => {
                 if (!exp.title && !exp.company) return null;
@@ -153,13 +156,13 @@ const Template1 = ({ data }) => {
                 ].filter(Boolean).join(" ");
                 return (
                   <div key={exp.id}>
-                    <p className="text-[10.5px] text-black/60 mb-0.5 tracking-wide">
+                    <p className="text-[0.875em] text-black/60 mb-0.5 tracking-wide">
                       {[exp.company, dateRange].filter(Boolean).join(" | ")}
                     </p>
-                    <p className="text-[12px] font-bold text-black">{exp.title}</p>
+                    <p className="text-[1.0em] font-bold text-black">{exp.title}</p>
                     {exp.description && (
                       <div
-                        className="mt-1 text-[11.5px] leading-[1.65] text-black preview"
+                        className="mt-1 text-[0.9583em] leading-[1.65] text-black preview"
                         dangerouslySetInnerHTML={{ __html: exp.description }}
                       />
                     )}
@@ -173,7 +176,7 @@ const Template1 = ({ data }) => {
         {/* ── PROJECTS ── */}
         {project.filter(p => p.title).length > 0 && (
           <section className="mb-5">
-            <SectionTitle>Projects</SectionTitle>
+            <SectionTitle>{sectionTitles[5] || "Projects"}</SectionTitle>
             <div className="space-y-4">
               {project.map((proj) => {
                 if (!proj.title) return null;
@@ -184,18 +187,18 @@ const Template1 = ({ data }) => {
                 ].filter(Boolean).join(" ");
                 return (
                   <div key={proj.id}>
-                    <p className="text-[10.5px] text-black/60 mb-0.5 tracking-wide">
+                    <p className="text-[0.875em] text-black/60 mb-0.5 tracking-wide">
                       {[proj.organization, dateRange].filter(Boolean).join(" | ")}
                     </p>
-                    <p className="text-[12px] font-bold text-black">
+                    <p className="text-[1.0em] font-bold text-black">
                       {proj.title}
                       {proj.url && (
-                        <span className="text-[10px] font-normal text-black/50 ml-2">{proj.url}</span>
+                        <span className="text-[0.8333em] font-normal text-black/50 ml-2">{proj.url}</span>
                       )}
                     </p>
                     {proj.description && (
                       <div
-                        className="mt-1 text-[11.5px] leading-[1.65] text-black preview"
+                        className="mt-1 text-[0.9583em] leading-[1.65] text-black preview"
                         dangerouslySetInnerHTML={{ __html: proj.description }}
                       />
                     )}
@@ -209,12 +212,12 @@ const Template1 = ({ data }) => {
         {/* ── SKILLS ── */}
         {uniqueSkills.length > 0 && (
           <section className="mb-8">
-            <SectionTitle>Skills</SectionTitle>
+            <SectionTitle>{sectionTitles[4] || "Skills"}</SectionTitle>
             <div className="grid grid-cols-3 gap-x-4 gap-y-1.5">
               {uniqueSkills.map((skill) => (
                 <div key={skill.id} className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-black flex-shrink-0" />
-                  <span className="text-[11.5px] text-black">{skill.name}</span>
+                  <span className="text-[0.9583em] text-black">{skill.name}</span>
                 </div>
               ))}
             </div>
@@ -232,7 +235,7 @@ const Template1 = ({ data }) => {
 function SectionTitle({ children }) {
   return (
     <div className="mb-3">
-      <h2 className="text-[12.5px] font-black tracking-[0.12em] uppercase text-black mb-1.5">
+      <h2 className="text-[1.0417em] font-black tracking-[0.12em] uppercase text-black mb-1.5">
         {children}
       </h2>
       <div className="border-t border-black" />

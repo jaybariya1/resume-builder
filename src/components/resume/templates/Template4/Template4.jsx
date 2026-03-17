@@ -18,6 +18,9 @@ const Template4 = ({ data, accentColor = "#16a34a" }) => {
     skills = [],
     project = [],
     hideSkillLevel = false,
+    fontFamily,
+    fontSize,
+    sectionTitles = {},
   } = data;
 
   const contactItems = [email, phone, location, linkedin, github, portfolio, website].filter(Boolean);
@@ -25,25 +28,25 @@ const Template4 = ({ data, accentColor = "#16a34a" }) => {
   return (
     <main
       id="resume-preview"
-      className="w-[794px] min-h-[1123px] mx-auto bg-white text-black text-[12.5px] leading-relaxed"
-      style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
+      className="w-[794px] min-h-[1123px] mx-auto bg-white text-black text-[1.0417em] leading-relaxed"
+      style={{ fontFamily: fontFamily || "'Helvetica Neue', Arial, sans-serif", fontSize: fontSize ? `${fontSize}px` : '12px' }}
     >
       {/* HEADER BAND */}
       <header className="px-10 pt-10 pb-6" style={{ backgroundColor: accentColor + "12" }}>
         <div className="flex justify-between items-end">
           <div>
-            <h1 className="text-[34px] font-black leading-none" style={{ color: accentColor }}>
+            <h1 className="text-[2.8333em] font-black leading-none" style={{ color: accentColor }}>
               {firstName}{" "}
               <span style={{ color: accentColor }}>{lastName}</span>
             </h1>
             {role && (
-              <p className="mt-1.5 text-[13px] font-semibold" style={{ color: accentColor }}>
+              <p className="mt-1.5 text-[1.0833em] font-semibold" style={{ color: accentColor }}>
                 {role}
               </p>
             )}
           </div>
           {contactItems.length > 0 && (
-            <div className="text-right text-[11px] text-gray-600 flex flex-col gap-0.5">
+            <div className="text-right text-[0.9167em] text-gray-600 flex flex-col gap-0.5">
               {email && <span>{email}</span>}
               {phone && <span>{phone}</span>}
               {location && <span>{location}</span>}
@@ -63,8 +66,8 @@ const Template4 = ({ data, accentColor = "#16a34a" }) => {
         {/* Summary */}
         {summary && (
           <section>
-            <h2 className="text-[10px] uppercase tracking-[0.18em] font-bold mb-2" style={{ color: accentColor }}>
-              About
+            <h2 className="text-[0.8333em] uppercase tracking-[0.18em] font-bold mb-2" style={{ color: accentColor }}>
+              {sectionTitles[1] || "About"}
             </h2>
             <div
               className="text-gray-700 preview pl-3 border-l-2"
@@ -77,8 +80,8 @@ const Template4 = ({ data, accentColor = "#16a34a" }) => {
         {/* Skills */}
         {skills.filter((s) => s.name).length > 0 && (
           <section>
-            <h2 className="text-[10px] uppercase tracking-[0.18em] font-bold mb-2" style={{ color: accentColor }}>
-              Skills
+            <h2 className="text-[0.8333em] uppercase tracking-[0.18em] font-bold mb-2" style={{ color: accentColor }}>
+              {sectionTitles[4] || "Skills"}
             </h2>
             <div className="space-y-1.5 pl-3">
               {skills
@@ -89,8 +92,8 @@ const Template4 = ({ data, accentColor = "#16a34a" }) => {
                   return (
                     <div key={skill.id}>
                       <div className="flex justify-between items-center">
-                        <span className="text-[11px] font-medium" style={{ color: accentColor }}>{skill.name}</span>
-                        {!hideSkillLevel && <span className="text-[9px]" style={{ color: accentColor }}>{levelLabel}</span>}
+                        <span className="text-[0.9167em] font-medium" style={{ color: accentColor }}>{skill.name}</span>
+                        {!hideSkillLevel && <span className="text-[0.75em]" style={{ color: accentColor }}>{levelLabel}</span>}
                       </div>
                       {!hideSkillLevel && (
                         <div className="flex gap-0.5 mt-0.5">
@@ -109,8 +112,8 @@ const Template4 = ({ data, accentColor = "#16a34a" }) => {
         {/* Experience */}
         {experience.filter((e) => e.title || e.company).length > 0 && (
           <section>
-            <h2 className="text-[10px] uppercase tracking-[0.18em] font-bold mb-3" style={{ color: accentColor }}>
-              Experience
+            <h2 className="text-[0.8333em] uppercase tracking-[0.18em] font-bold mb-3" style={{ color: accentColor }}>
+              {sectionTitles[2] || "Experience"}
             </h2>
             {experience.map((exp) => {
               if (!exp.title && !exp.company) return null;
@@ -121,17 +124,17 @@ const Template4 = ({ data, accentColor = "#16a34a" }) => {
                   style={{ borderColor: accentColor + "55" }}
                 >
                   <div className="flex justify-between items-baseline">
-                    <p className="font-bold text-[13px] text-gray-900">{exp.title}</p>
-                    <span className="text-[10px] text-gray-400 whitespace-nowrap ml-4">
+                    <p className="font-bold text-[1.0833em] text-gray-900">{exp.title}</p>
+                    <span className="text-[0.8333em] text-gray-400 whitespace-nowrap ml-4">
                       {exp.startDate}{exp.startDate && " – "}{exp.current ? "Present" : exp.endDate}
                     </span>
                   </div>
-                  <p className="text-[11.5px] font-semibold" style={{ color: accentColor }}>
+                  <p className="text-[0.9583em] font-semibold" style={{ color: accentColor }}>
                     {exp.company}{exp.location ? ` · ${exp.location}` : ""}
                   </p>
                   {exp.description && (
                     <div
-                      className="preview mt-1.5 text-gray-600 text-[12px]"
+                      className="preview mt-1.5 text-gray-600 text-[1.0em]"
                       dangerouslySetInnerHTML={{ __html: exp.description }}
                     />
                   )}
@@ -144,8 +147,8 @@ const Template4 = ({ data, accentColor = "#16a34a" }) => {
         {/* Projects */}
         {project.filter((p) => p.title).length > 0 && (
           <section>
-            <h2 className="text-[10px] uppercase tracking-[0.18em] font-bold mb-3" style={{ color: accentColor }}>
-              Projects
+            <h2 className="text-[0.8333em] uppercase tracking-[0.18em] font-bold mb-3" style={{ color: accentColor }}>
+              {sectionTitles[5] || "Projects"}
             </h2>
             {project.map((proj) => {
               if (!proj.title) return null;
@@ -155,17 +158,17 @@ const Template4 = ({ data, accentColor = "#16a34a" }) => {
                   className="mb-3 pl-3 border-l-2"
                   style={{ borderColor: accentColor + "55" }}
                 >
-                  <p className="font-bold text-[13px] text-gray-900">
+                  <p className="font-bold text-[1.0833em] text-gray-900">
                     {proj.title}
                     {proj.url && (
-                      <span className="text-[10px] font-normal ml-2" style={{ color: accentColor }}>
+                      <span className="text-[0.8333em] font-normal ml-2" style={{ color: accentColor }}>
                         {proj.url}
                       </span>
                     )}
                   </p>
                   {proj.description && (
                     <div
-                      className="preview mt-1 text-gray-600 text-[12px]"
+                      className="preview mt-1 text-gray-600 text-[1.0em]"
                       dangerouslySetInnerHTML={{ __html: proj.description }}
                     />
                   )}
@@ -178,8 +181,8 @@ const Template4 = ({ data, accentColor = "#16a34a" }) => {
         {/* Education */}
         {education.filter((e) => e.degree || e.school).length > 0 && (
           <section>
-            <h2 className="text-[10px] uppercase tracking-[0.18em] font-bold mb-3" style={{ color: accentColor }}>
-              Education
+            <h2 className="text-[0.8333em] uppercase tracking-[0.18em] font-bold mb-3" style={{ color: accentColor }}>
+              {sectionTitles[3] || "Education"}
             </h2>
             {education.map((edu) => {
               if (!edu.degree && !edu.school) return null;
@@ -190,17 +193,17 @@ const Template4 = ({ data, accentColor = "#16a34a" }) => {
                   style={{ borderColor: accentColor + "55" }}
                 >
                   <div className="flex justify-between items-baseline">
-                    <p className="font-bold text-[13px] text-gray-900">{edu.degree}</p>
+                    <p className="font-bold text-[1.0833em] text-gray-900">{edu.degree}</p>
                     {edu.graduationDate && (
-                      <span className="text-[10px] text-gray-400 ml-4">{edu.graduationDate}</span>
+                      <span className="text-[0.8333em] text-gray-400 ml-4">{edu.graduationDate}</span>
                     )}
                   </div>
-                  <p className="text-[11.5px]" style={{ color: accentColor }}>
+                  <p className="text-[0.9583em]" style={{ color: accentColor }}>
                     {edu.school}{edu.location ? ` · ${edu.location}` : ""}
                   </p>
                   {edu.description && (
                     <div
-                      className="preview mt-1 text-gray-600 text-[12px]"
+                      className="preview mt-1 text-gray-600 text-[1.0em]"
                       dangerouslySetInnerHTML={{ __html: edu.description }}
                     />
                   )}

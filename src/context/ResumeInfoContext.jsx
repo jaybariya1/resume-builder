@@ -16,6 +16,8 @@ export const ResumeInfoProvider = ({ children }) => {
   const [resumeData, setResumeData] = useState({
     id: null,
     title: "",
+    sectionTitles: {},
+    stepOrder: [1, 2, 3, 4, 5],
     firstName: "",
     lastName: "",
     email: "",

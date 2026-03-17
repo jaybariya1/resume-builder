@@ -99,15 +99,17 @@ const PersonalInfoStep = () => {
   };
 
   const addInfo = (value) => {
+    const isCurrentlyOn = inputFields[value];
     setInputFields((prev) => ({
       ...prev,
-      [value]: inputFields[value] ? false : true,
+      [value]: !isCurrentlyOn,
     }));
-    if (!inputFields[value] === false) {
-      setResumeData({
-        ...resumeData,
+    // Clear the field value when hiding it
+    if (isCurrentlyOn) {
+      setResumeData((prev) => ({
+        ...prev,
         [value]: "",
-      });
+      }));
     }
   };
 

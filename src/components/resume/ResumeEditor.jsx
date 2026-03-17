@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+  useCallback,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ResumeInfoContext } from "../../context/ResumeInfoContext";
 import { useAuth } from "../../context/AuthContext";
@@ -13,183 +19,513 @@ import ProjectStep from "./steps/ProjectStep";
 import AdditionalStep from "./steps/AdditionalStep";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { LayoutDashboard, Download, Eye, User, Award, Plus, FolderGit2, FileText, Briefcase, GraduationCap, LogOut, ChevronDown, Pencil, Monitor, Sliders } from "lucide-react";
+import {
+  LayoutDashboard,
+  Download,
+  User,
+  Award,
+  Plus,
+  FolderGit2,
+  FileText,
+  Briefcase,
+  GraduationCap,
+  LogOut,
+  ChevronDown,
+  Pencil,
+  Monitor,
+  Sliders,
+  RotateCcw,
+  GripVertical,
+  ChevronUp,
+  Lock,
+} from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { debounce, isEqual } from "lodash";
 import GeneratingOverlay from "./GeneratingOverlay";
 import TemplatePicker from "./TemplatePicker";
 import CustomizePanel from "./CustomizePanel";
+import { useAutoScroll } from "../../hooks/useAutoScroll";
+import { ScrollContext } from "../../context/ScrollContext";
 
+// ─── Step definitions (id matches index for sectionTitles map) ───────────────
+const STEP_DEFS = [
+  {
+    id: 0,
+    key: "personal",
+    defaultTitle: "Personal Info",
+    icon: User,
+    fixed: "top",
+  },
+  {
+    id: 1,
+    key: "summary",
+    defaultTitle: "Professional Summary",
+    icon: FileText,
+    fixed: false,
+  },
+  {
+    id: 2,
+    key: "experience",
+    defaultTitle: "Experience",
+    icon: Briefcase,
+    fixed: false,
+  },
+  {
+    id: 3,
+    key: "education",
+    defaultTitle: "Education",
+    icon: GraduationCap,
+    fixed: false,
+  },
+  { id: 4, key: "skills", defaultTitle: "Skills", icon: Award, fixed: false },
+  {
+    id: 5,
+    key: "project",
+    defaultTitle: "Project",
+    icon: FolderGit2,
+    fixed: false,
+  },
+  {
+    id: 6,
+    key: "additional",
+    defaultTitle: "Additional Sections",
+    icon: Plus,
+    fixed: "bottom",
+  },
+];
 
+const DEFAULT_MIDDLE_ORDER = [1, 2, 3, 4, 5]; // ids of draggable steps
 
-export default function ResumeEditor({ mode}) {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [showPreview, setShowPreview] = useState(false);
-  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
-  const [value, setValue] = useState();
-  const [selectedId, setSelectedId] = useState("modern");
-  const [accentColor, setAccentColor] = useState(null); // null = use template default
-  const [activeView, setActiveView] = useState("edit"); // "edit" | "preview" | "customize"
+// ─── Section title inline editor ─────────────────────────────────────────────
+function SectionTitleEditor({
+  stepId,
+  title,
+  defaultTitle,
+  onCommit,
+  onReset,
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(title);
+  const inputRef = useRef(null);
+  const isModified = title !== defaultTitle;
+
+  useEffect(() => {
+    if (editing) {
+      setDraft(title);
+      setTimeout(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }, 50);
+    }
+  }, [editing]);
+
+  const commit = () => {
+    const t = draft.trim();
+    if (t) onCommit(t);
+    setEditing(false);
+  };
+
+  return (
+    <span className="flex items-center gap-1 group/title flex-1 min-w-0">
+      {editing ? (
+        <span className="relative inline-flex items-center">
+          <span
+            aria-hidden
+            className="invisible absolute whitespace-pre text-sm font-semibold pointer-events-none"
+          >
+            {draft.length >= 7 ? draft : "XXXXXXX"}
+          </span>
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commit();
+              if (e.key === "Escape") setEditing(false);
+            }}
+            style={{ width: `max(${Math.max(7, draft.length)}ch, 7ch)` }}
+            className="border-b-2 outline-none focus:border-[#f97316] selection:bg-orange-100 text-sm font-semibold bg-transparent"
+          />
+        </span>
+      ) : (
+        <>
+          <span className="truncate">{title}</span>
+          {!isModified && (
+            <button
+              onClick={() => setEditing(true)}
+              title="Edit section title"
+              className="opacity-0 group-hover/title:opacity-100 flex-shrink-0 p-0.5 rounded text-stone-400 hover:text-orange-500 hover:bg-orange-50 transition-all duration-150"
+            >
+              <Pencil size={12} />
+            </button>
+          )}
+          {isModified && (
+            <button
+              onClick={onReset}
+              title="Reset to default title"
+              className="opacity-0 group-hover/title:opacity-100 flex-shrink-0 p-0.5 rounded text-stone-400 hover:text-orange-500 hover:bg-orange-50 transition-all duration-150"
+            >
+              <RotateCcw size={12} />
+            </button>
+          )}
+        </>
+      )}
+    </span>
+  );
+}
+
+// ─── Step content renderer ────────────────────────────────────────────────────
+function StepContent({ stepId }) {
+  switch (stepId) {
+    case 0:
+      return <PersonalInfoStep />;
+    case 1:
+      return <SummaryStep />;
+    case 2:
+      return <ExperienceStep />;
+    case 3:
+      return <EducationStep />;
+    case 4:
+      return <SkillsStep />;
+    case 5:
+      return <ProjectStep />;
+    case 6:
+      return <AdditionalStep />;
+    default:
+      return null;
+  }
+}
+
+// ─── Collapsible section card ─────────────────────────────────────────────────
+function SectionCard({
+  stepDef,
+  title,
+  defaultTitle,
+  dragging,
+  isOver,
+  dragHandleProps,
+  onTitleCommit,
+  onTitleReset,
+  collapsed,
+  onToggleCollapse,
+}) {
+  const Icon = stepDef.icon;
+  const fixed = stepDef.fixed;
+
+  return (
+    <div
+      className={`
+        bg-white border rounded-xl shadow-sm overflow-hidden transition-all duration-150
+        ${isOver ? "ring-2 ring-orange-400 ring-offset-2 scale-[1.005]" : ""}
+        ${dragging ? "opacity-40 shadow-lg" : "border-orange-200"}
+      `}
+    >
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
+        {/* Drag handle or lock icon */}
+        {fixed ? (
+          <div
+            className="flex-shrink-0 p-1 text-stone-300"
+            title={fixed === "top" ? "Always first" : "Always last"}
+          >
+            <Lock size={13} />
+          </div>
+        ) : (
+          <div
+            {...dragHandleProps}
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-orange-100 text-stone-300 hover:text-orange-500 transition-colors"
+            title="Drag to reorder section"
+          >
+            <GripVertical size={15} />
+          </div>
+        )}
+
+        <Icon className="w-4 h-4 text-orange-500 flex-shrink-0" />
+
+        <SectionTitleEditor
+          stepId={stepDef.id}
+          title={title}
+          defaultTitle={defaultTitle}
+          onCommit={onTitleCommit}
+          onReset={onTitleReset}
+        />
+
+        {/* Collapse toggle */}
+        <button
+          onClick={onToggleCollapse}
+          className="flex-shrink-0 ml-auto p-1 rounded hover:bg-orange-100 text-stone-400 hover:text-orange-500 transition-colors"
+          title={collapsed ? "Expand" : "Collapse"}
+        >
+          <ChevronUp
+            size={15}
+            className={`transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
+          />
+        </button>
+      </div>
+
+      {/* Content */}
+      {!collapsed && (
+        <div className="p-4">
+          <StepContent stepId={stepDef.id} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main ResumeEditor ────────────────────────────────────────────────────────
+export default function ResumeEditor({ mode }) {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { user } = useAuth();
+  const { resumeData, setResumeData, saveResume, loadResumeById } =
+    useContext(ResumeInfoContext);
+
+  // ── view / UI state ──────────────────────────────────────────────────────
+  const [activeView, setActiveView] = useState("edit");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const userMenuRef = useRef(null);
   const titleInputRef = useRef(null);
-  const navigate = useNavigate();
-  const { resumeData, setResumeData, saveResume, loadResumeById } =
-    useContext(ResumeInfoContext);
-  const { user } = useAuth();
-  const { id } = useParams();
-  const saveTimeout = React.useRef(null);
-  const lastSaved = React.useRef(null);
-  const isDirtyRef = useRef(false);
-  const [saveStatus, setSaveStatus] = useState('Saved');
+
+  // ── template / accent ────────────────────────────────────────────────────
+  const [selectedId, setSelectedId] = useState("modern");
+  const [accentColor, setAccentColor] = useState(null);
+
+  // ── save status ──────────────────────────────────────────────────────────
+  const [saveStatus, setSaveStatus] = useState("Saved");
+  const isSaving = useRef(false);
   const isInitialMount = useRef(true);
   const lastSavedVersion = useRef(null);
 
-  // Close user menu on outside click
+  // ── step order & collapse state ──────────────────────────────────────────
+  // middleOrder: array of step ids for the draggable middle sections
+  const [middleOrder, setMiddleOrder] = useState(DEFAULT_MIDDLE_ORDER);
+  const [collapsed, setCollapsed] = useState({}); // { [stepId]: bool }
+  const [stepTitles, setStepTitles] = useState(() =>
+    Object.fromEntries(STEP_DEFS.map((s) => [s.id, s.defaultTitle])),
+  );
+
+  // ── drag state (section-level) ───────────────────────────────────────────
+  const sectionDragIndex = useRef(null);
+  const [sectionOverIndex, setSectionOverIndex] = useState(null);
+
+  // ── auto-scroll for drag in the left edit panel ──────────────────────────
+  const {
+    scrollRef: editScrollRef,
+    startAutoScroll,
+    updatePointer,
+    stopAutoScroll,
+  } = useAutoScroll({ edgeSize: 80, speed: 14 });
+
+  // ── step-mode (wizard) for create ───────────────────────────────────────
+  const [currentStep, setCurrentStep] = useState(0);
+
+  // Determine display mode: edit=all-at-once, create=wizard
+  const isAllAtOnce = mode === "edit";
+
+  // ── user display ─────────────────────────────────────────────────────────
+  const displayName =
+    user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
+  const initials = displayName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  // ── load resume ──────────────────────────────────────────────────────────
   useEffect(() => {
-    const handler = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+    if (mode === "edit") loadResumeById(id);
+  }, [mode, id]);
+
+  // ── sync template/accent → resumeData ────────────────────────────────────
+  useEffect(() => {
+    setResumeData((prev) => ({ ...prev, templateId: selectedId }));
+  }, [selectedId]);
+  useEffect(() => {
+    setResumeData((prev) => ({ ...prev, accentColor }));
+  }, [accentColor]);
+
+  // ── restore from loaded resume ───────────────────────────────────────────
+  useEffect(() => {
+    if (!resumeData?.id) return;
+    if (resumeData.templateId) setSelectedId(resumeData.templateId);
+    if (resumeData.accentColor !== undefined)
+      setAccentColor(resumeData.accentColor || null);
+
+    // Restore section titles
+    if (resumeData.sectionTitles) {
+      setStepTitles((prev) => {
+        const next = { ...prev };
+        STEP_DEFS.forEach((s) => {
+          next[s.id] = resumeData.sectionTitles[s.id] || s.defaultTitle;
+        });
+        return next;
+      });
+    }
+
+    // Restore middle order
+    if (resumeData.stepOrder && Array.isArray(resumeData.stepOrder)) {
+      setMiddleOrder(resumeData.stepOrder);
+    }
+  }, [resumeData?.id]);
+
+  // ── close user menu on outside click ────────────────────────────────────
+  useEffect(() => {
+    const h = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target))
         setShowUserMenu(false);
-      }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  // Focus title input when editing starts
+  // ── focus title input ────────────────────────────────────────────────────
   useEffect(() => {
-    if (editingTitle && titleInputRef.current) {
-      titleInputRef.current.focus();
-      titleInputRef.current.select();
+    if (editingTitle) {
+      titleInputRef.current?.focus();
+      titleInputRef.current?.select();
     }
   }, [editingTitle]);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
+  // ── section title helpers ────────────────────────────────────────────────
+  const commitSectionTitle = (stepId, newTitle) => {
+    setStepTitles((prev) => ({ ...prev, [stepId]: newTitle }));
+    setResumeData((prev) => ({
+      ...prev,
+      sectionTitles: { ...(prev.sectionTitles || {}), [stepId]: newTitle },
+    }));
   };
 
-  const displayName = user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
-  const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-  
+  const resetSectionTitle = (stepId) => {
+    const def = STEP_DEFS.find((s) => s.id === stepId)?.defaultTitle || "";
+    setStepTitles((prev) => ({ ...prev, [stepId]: def }));
+    setResumeData((prev) => {
+      const updated = { ...(prev.sectionTitles || {}) };
+      delete updated[stepId];
+      return { ...prev, sectionTitles: updated };
+    });
+  };
 
+  // ── middle-order drag handlers ────────────────────────────────────────────
+  const getSectionDragProps = (index) => ({
+    draggable: true,
+    onDragStart: (e) => {
+      sectionDragIndex.current = index;
+      e.dataTransfer.effectAllowed = "move";
+      e.currentTarget.closest("[data-section-card]").style.opacity = "0.4";
+    },
+    onDragEnd: (e) => {
+      e.currentTarget.closest("[data-section-card]").style.opacity = "";
+      sectionDragIndex.current = null;
+      setSectionOverIndex(null);
+      stopAutoScroll();
+    },
+  });
 
-  const [steps, setSteps] = useState([
-    { id: 0, title: "Personal Info", icon: User },
-    { id: 1, title: "Professional Summary", icon: FileText },
-    { id: 2, title: "Experience", icon: Briefcase },
-    { id: 3, title: "Education", icon: GraduationCap },
-    { id: 4, title: "Skills", icon: Award },
-    { id: 5, title: "Project", icon: FolderGit2 },
-    { id: 6, title: "Additional Sections", icon: Plus },
-  ]);
+  const getSectionDropProps = (index) => ({
+    onDragOver: (e) => {
+      e.preventDefault();
+      startAutoScroll(e);
+      updatePointer(e);
+      if (
+        sectionDragIndex.current !== null &&
+        sectionDragIndex.current !== index
+      ) {
+        setSectionOverIndex(index);
+      }
+    },
+    onDragLeave: () => setSectionOverIndex(null),
+    onDrop: (e) => {
+      e.preventDefault();
+      stopAutoScroll();
+      const from = sectionDragIndex.current;
+      const to = index;
+      if (from === null || from === to) {
+        setSectionOverIndex(null);
+        return;
+      }
+      const next = [...middleOrder];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      setMiddleOrder(next);
+      setResumeData((prev) => ({ ...prev, stepOrder: next }));
+      sectionDragIndex.current = null;
+      setSectionOverIndex(null);
+    },
+  });
 
-  useEffect(() => {
-    if (mode === "edit") {
-      console.log("Loading resume with ID:", id);
-      loadResumeById(id);
-    }
-
-    
-    
-  }, [mode, id]);
-
-const isSaving = useRef(false);
-
-const saveToDatabase = async (currentData) => {
-  // If data is null or exactly the same as what we last saved, STOP.
-  if (isSaving.current) {
-    console.log("Save in progress, skipping this attempt...");
-    return;
-  }
-
-  if (!currentData || isEqual(currentData, lastSavedVersion.current)) {
-    setSaveStatus('Saved');
-    return;
-  }
-
-  setSaveStatus('Saving...');
-  try {
-    isSaving.current = true;
-    let response;
-    
-    if (id == undefined) {
-      response = await saveResume("create", currentData.id ? currentData.id : null, currentData);
-    } else {
-      // Use currentData.id or resumeId
-      response = await saveResume("edit", id, currentData);
-    }
-    console.log("Auto-save response:", response);
-    if (response != null) {
-      currentData.id = response;
-      setResumeData((prev) => ({ ...prev, id: response }));
-    }
-    // CRITICAL: Update the reference with the data we JUST saved
-    lastSavedVersion.current = JSON.parse(JSON.stringify(currentData));
-    setSaveStatus("Saved");
-  } catch (error) {
-    console.error("Autosave error:", error);
-    setSaveStatus("Error");
-  } finally {
-    isSaving.current = false;
-  }
-};
-
-const debouncedSave = useCallback(
-  debounce((data) => saveToDatabase(data), 1500),
-  [mode, id]
-);
-
-useEffect(() => {
-  // Logic to handle the first time data is loaded from Supabase
-  if (resumeData && Object.keys(resumeData).length > 0) {
-    
-    if (isInitialMount.current) {
-      lastSavedVersion.current = JSON.parse(JSON.stringify(resumeData));
-      isInitialMount.current = false;
+  // ── save to DB ────────────────────────────────────────────────────────────
+  const saveToDatabase = async (currentData) => {
+    if (isSaving.current) return;
+    if (!currentData || isEqual(currentData, lastSavedVersion.current)) {
+      setSaveStatus("Saved");
       return;
     }
-
-    if (!isEqual(resumeData, lastSavedVersion.current)) {
-      setSaveStatus('Typing...');
-      debouncedSave(resumeData);
+    setSaveStatus("Saving...");
+    try {
+      isSaving.current = true;
+      let response;
+      if (id == undefined) {
+        response = await saveResume(
+          "create",
+          currentData.id || null,
+          currentData,
+        );
+      } else {
+        response = await saveResume("edit", id, currentData);
+      }
+      if (response != null) {
+        currentData.id = response;
+        setResumeData((prev) => ({ ...prev, id: response }));
+      }
+      lastSavedVersion.current = JSON.parse(JSON.stringify(currentData));
+      setSaveStatus("Saved");
+    } catch (err) {
+      console.error("Autosave error:", err);
+      setSaveStatus("Error");
+    } finally {
+      isSaving.current = false;
     }
-  }
-}, [resumeData, debouncedSave]);
-
-useEffect(() => {
-  return () => debouncedSave.cancel();
-}, [debouncedSave]);
-
-
-
-
-  const handleNavigateAway = async (path) => {
-    navigate(path);
   };
 
+  const debouncedSave = useCallback(
+    debounce((data) => saveToDatabase(data), 1500),
+    [mode, id],
+  );
+
   useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      saveResume(mode, mode === "edit" ? resumeId : null);
+    if (resumeData && Object.keys(resumeData).length > 0) {
+      if (isInitialMount.current) {
+        lastSavedVersion.current = JSON.parse(JSON.stringify(resumeData));
+        isInitialMount.current = false;
+        return;
+      }
+      if (!isEqual(resumeData, lastSavedVersion.current)) {
+        setSaveStatus("Typing...");
+        debouncedSave(resumeData);
+      }
+    }
+  }, [resumeData, debouncedSave]);
+
+  useEffect(() => () => debouncedSave.cancel(), [debouncedSave]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      saveResume(mode, mode === "edit" ? id : null, resumeData);
       e.preventDefault();
       e.returnValue = "";
     };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
   }, [resumeData]);
 
+  // ── PDF download ──────────────────────────────────────────────────────────
   const downloadPDF = () => {
     const element = document.getElementById("resume-preview");
     if (!element) return;
-
-    // Inject a one-time print stylesheet into the live document.
-    // This hides everything except the resume and resets all layout
-    // so Tailwind classes render exactly as they do on screen.
     const styleId = "resume-print-style";
     let style = document.getElementById(styleId);
     if (!style) {
@@ -197,47 +533,14 @@ useEffect(() => {
       style.id = styleId;
       document.head.appendChild(style);
     }
-
     style.textContent = `
       @media print {
-        @page {
-          size: 794px 1123px;
-          margin: 0 !important;
-        }
-
-        /* Hide everything on the page */
-        body > * {
-          display: none !important;
-        }
-
-        /* Show only our print container */
-        #resume-print-container {
-          display: block !important;
-          position: fixed !important;
-          inset: 0 !important;
-          z-index: 99999 !important;
-          background: white !important;
-        }
-
-        /* The resume main — exact A4 size, no extra margin */
-        #resume-print-container #resume-preview {
-          width: 794px !important;
-          min-height: 1123px !important;
-          margin: 0 !important;
-          box-shadow: none !important;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-
-        /* Tailwind mx-auto adds auto margins — kill them in print */
-        #resume-print-container .mx-auto {
-          margin-left: 0 !important;
-          margin-right: 0 !important;
-        }
-      }
-    `;
-
-    // Create or reuse a print container div at the body root
+        @page { size: 794px 1123px; margin: 0 !important; }
+        body > * { display: none !important; }
+        #resume-print-container { display: block !important; position: fixed !important; inset: 0 !important; z-index: 99999 !important; background: white !important; }
+        #resume-print-container #resume-preview { width: 794px !important; min-height: 1123px !important; margin: 0 !important; box-shadow: none !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        #resume-print-container .mx-auto { margin-left: 0 !important; margin-right: 0 !important; }
+      }`;
     let container = document.getElementById("resume-print-container");
     if (!container) {
       container = document.createElement("div");
@@ -245,285 +548,381 @@ useEffect(() => {
       container.style.display = "none";
       document.body.appendChild(container);
     }
-
-    // Move (not clone) the live resume element into the container so all
-    // computed styles, Tailwind classes and inline styles are fully intact.
-    // We put it back after printing.
     const parent = element.parentNode;
     const nextSibling = element.nextSibling;
     container.appendChild(element);
-
     const cleanup = () => {
-      // Restore element to original position
-      if (nextSibling) {
-        parent.insertBefore(element, nextSibling);
-      } else {
-        parent.appendChild(element);
-      }
+      nextSibling
+        ? parent.insertBefore(element, nextSibling)
+        : parent.appendChild(element);
       style.textContent = "";
     };
-
-    // Use afterprint event to restore — works in all modern browsers
     window.addEventListener("afterprint", cleanup, { once: true });
-
     window.print();
   };
 
-  const renderStepContent = () => {
-    switch (steps[currentStep].title) {
-      case "Personal Info":
-        return <PersonalInfoStep />;
-      case "Professional Summary":
-        return <SummaryStep />;
-      case "Experience":
-        return <ExperienceStep />;
-      case "Education":
-        return <EducationStep />;
-      case "Skills":
-        return <SkillsStep />;
-      case "Project":
-        return <ProjectStep />;
-      case "Additional Sections":
-        return <AdditionalStep />;
-      default:
-        return <PersonalInfoStep />;
-    }
-  };
+  // ── build ordered step list for all-at-once view ──────────────────────────
+  const orderedSteps = [
+    STEP_DEFS[0],
+    ...middleOrder
+      .map((id) => STEP_DEFS.find((s) => s.id === id))
+      .filter(Boolean),
+    STEP_DEFS[6],
+  ];
 
+  // ── wizard steps (create mode) ────────────────────────────────────────────
+  const wizardSteps = STEP_DEFS;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div>
       <GeneratingOverlay />
       <TemplatePicker
-        isOpen={showTemplatePicker}
-        onClose={() => setShowTemplatePicker(false)}
+        isOpen={false}
+        onClose={() => {}}
         selectedId={selectedId}
         onSelect={setSelectedId}
       />
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 to-red-50 overflow-hidden">
 
-        {/* ── NEW HEADER ─────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-50 h-14 bg-white border-b border-[#fde3c8] flex items-center px-4 gap-4">
-
-          {/* ── LEFT: Resume title ── */}
-          <div className="flex items-center gap-2 min-w-0 w-[260px] flex-shrink-0">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center flex-shrink-0">
-              <FileText size={14} className="text-white" />
-            </div>
-            {editingTitle ? (
-              <input
-                ref={titleInputRef}
-                value={resumeData.title || ""}
-                onChange={e => setResumeData(prev => ({ ...prev, title: e.target.value }))}
-                onBlur={() => setEditingTitle(false)}
-                onKeyDown={e => { if (e.key === "Enter" || e.key === "Escape") setEditingTitle(false); }}
-                placeholder="Untitled Resume"
-                className="flex-1 min-w-0 text-sm font-semibold text-foreground bg-[#fff7ed] border border-[#fdba74] rounded-[var(--radius)] px-2 py-1 outline-none focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/20 transition-all"
-              />
-            ) : (
-              <button
-                onClick={() => setEditingTitle(true)}
-                className="flex items-center gap-1.5 group flex-1 min-w-0"
-              >
-                <span className="text-sm font-semibold text-stone-800 truncate">
-                  {resumeData.title || "Untitled Resume"}
-                </span>
-                <Pencil size={12} className="text-stone-400 group-hover:text-orange-500 flex-shrink-0 transition-colors" />
-              </button>
-            )}
-            {/* Save status */}
-            <span className="text-[10px] font-medium text-stone-400 flex-shrink-0 hidden sm:block">
-              {saveStatus === "Saving..." ? "Saving…" : saveStatus === "Saved" ? "✓ Saved" : saveStatus}
-            </span>
-          </div>
-
-          {/* ── CENTER: Edit / Customize / Preview toggle tabs ── */}
-          <div className="flex-1 flex justify-center">
-            <div className="flex bg-[#fff7ed] border border-[#fde3c8] rounded-[var(--radius)] p-1 gap-1">
-              <button
-                onClick={() => setActiveView("edit")}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-150 ${
-                  activeView === "edit"
-                    ? "bg-white text-[#9a3412] shadow-[0_1px_3px_rgba(234,88,12,0.12)]"
-                    : "text-[#78716c] hover:text-[#44403c]"
-                }`}
-              >
-                <Pencil size={13} />
-                Edit
-              </button>
-              <button
-                onClick={() => setActiveView("customize")}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-150 ${
-                  activeView === "customize"
-                    ? "bg-white text-[#9a3412] shadow-[0_1px_3px_rgba(234,88,12,0.12)]"
-                    : "text-[#78716c] hover:text-[#44403c]"
-                }`}
-              >
-                <Sliders size={13} />
-                Customize
-              </button>
-              <button
-                onClick={() => setActiveView("preview")}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-150 ${
-                  activeView === "preview"
-                    ? "bg-white text-[#9a3412] shadow-[0_1px_3px_rgba(234,88,12,0.12)]"
-                    : "text-[#78716c] hover:text-[#44403c]"
-                }`}
-              >
-                <Monitor size={13} />
-                Preview
-              </button>
-            </div>
-          </div>
-
-          {/* ── RIGHT: Download + User menu ── */}
-          <div className="flex items-center gap-2 w-[260px] flex-shrink-0 justify-end">
-
-            {/* Download */}
-            <Button
-              onClick={downloadPDF}
-              className=""
-              variant="default"
-            >
-              <Download size={14} />
-              Download
-            </Button>
-
-            {/* User avatar button */}
-            <div className="relative" ref={userMenuRef}>
-              <button
-                onClick={() => setShowUserMenu(v => !v)}
-                className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-[var(--radius)] hover:bg-[#fff7ed] transition-colors"
-              >
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
-                  {initials}
-                </div>
-                <span className="text-sm font-medium text-stone-700 hidden sm:block max-w-[100px] truncate">{displayName}</span>
-                <ChevronDown size={13} className={`text-stone-400 transition-transform duration-150 ${showUserMenu ? "rotate-180" : ""}`} />
-              </button>
-
-              {/* Dropdown */}
-              {showUserMenu && (
-                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-lg shadow-xl border border-[#fde3c8] overflow-hidden z-50">
-                  {/* User info */}
-                  <div className="px-4 py-3 border-b border-[#fde3c8] bg-[#fff7ed]">
-                    <p className="text-sm font-bold text-stone-800 truncate">{displayName}</p>
-                    <p className="text-xs text-stone-400 truncate">{user?.email}</p>
-                  </div>
-                  {/* Menu items */}
-                  <div className="py-1">
-                    <button
-                      onClick={() => { setShowUserMenu(false); navigate("/dashboard"); }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-[#fff7ed] hover:text-[#9a3412] transition-colors"
-                    >
-                      <LayoutDashboard size={15} className="text-stone-400" />
-                      Dashboard
-                    </button>
-                    <div className="h-px bg-[#fde3c8] mx-2 my-1" />
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#dc2626] hover:bg-red-50 transition-colors"
-                    >
-                      <LogOut size={15} />
-                      Sign out
-                    </button>
-                  </div>
-                </div>
+      <ScrollContext.Provider
+        value={{ startAutoScroll, updatePointer, stopAutoScroll }}
+      >
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 to-red-50 overflow-hidden">
+          {/* ── HEADER ────────────────────────────────────────────────────── */}
+          <header className="fixed min-w-screen top-0 z-50 h-14 bg-white border-b border-[#fde3c8] flex items-center px-4 gap-4">
+            {/* LEFT: resume title */}
+            <div className="flex items-center gap-2 min-w-0 w-[260px] shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center flex-shrink-0">
+                <FileText size={14} className="text-white" />
+              </div>
+              {editingTitle ? (
+                <input
+                  ref={titleInputRef}
+                  value={resumeData.title || ""}
+                  onChange={(e) =>
+                    setResumeData((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }))
+                  }
+                  onBlur={() => setEditingTitle(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === "Escape")
+                      setEditingTitle(false);
+                  }}
+                  placeholder="Untitled Resume"
+                  className="flex-1 min-w-0 text-sm font-semibold outline-none border-b-2 border-[#fdba74] focus:border-[#f97316] selection:bg-orange-100 transition-all"
+                />
+              ) : (
+                <button
+                  onClick={() => setEditingTitle(true)}
+                  className="flex items-center gap-1.5 group flex-1 min-w-0"
+                >
+                  <span className="text-sm font-semibold pb-0.5 text-stone-800 truncate">
+                    {resumeData.title || "Untitled Resume"}
+                  </span>
+                  <Pencil
+                    size={12}
+                    className="text-stone-400 group-hover:text-orange-500 flex-shrink-0 transition-colors"
+                  />
+                </button>
               )}
+              <span className="text-[10px] font-medium text-stone-400 flex-shrink-0 hidden sm:block">
+                {saveStatus === "Saving..."
+                  ? "Saving…"
+                  : saveStatus === "Saved"
+                    ? "✓ Saved"
+                    : saveStatus}
+              </span>
             </div>
-          </div>
-        </header>
-        {/* ── END HEADER ─────────────────────────────────────────────── */}
 
-        <div className="w-full flex-1 min-h-0">
+            {/* CENTER: view toggle */}
+            <div className="flex-1 flex justify-center">
+              <div className="flex bg-[#fff7ed] border border-[#fde3c8] rounded-lg p-1 gap-1">
+                {[
+                  { key: "edit", icon: Pencil, label: "Edit" },
+                  { key: "customize", icon: Sliders, label: "Customize" },
+                  { key: "preview", icon: Monitor, label: "Preview" },
+                ].map(({ key, icon: Icon, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setActiveView(key)}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-150 ${
+                      activeView === key
+                        ? "bg-white text-[#9a3412] shadow-[0_1px_3px_rgba(234,88,12,0.12)]"
+                        : "text-[#78716c] hover:text-[#44403c]"
+                    }`}
+                  >
+                    <Icon size={13} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          {steps.map((step) => {
-            const Icon = step.icon;
-            const isActive = currentStep === step.id;
-            const isCompleted = currentStep > step.id;
-          })}
-
-          <div className="grid grid-cols-1 lg:grid-cols-4 h-[calc(100vh-56px)]">
-            {/* Left Panel — Edit form OR Customize panel, hidden in preview */}
-            <div
-              className={`lg:col-span-2 rounded-md hide-scrollbar flex flex-col min-h-0 ${activeView === "preview" ? "hidden lg:hidden" : ""}`}
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              {/* ── CUSTOMIZE MODE ── */}
-              {activeView === "customize" && (
-                <div className="flex-1 flex flex-col min-h-0 mx-1 mt-1 border border-orange-200 shadow-lg rounded-md overflow-hidden">
-                  <CustomizePanel selectedId={selectedId} onSelectTemplate={setSelectedId} accentColor={accentColor} onAccentChange={setAccentColor} />
-                </div>
-              )}
-
-              {/* ── EDIT MODE ── */}
-              {activeView === "edit" && (
-                <>
-                  <Card className="border-orange-200 shadow-lg rounded-md flex flex-col min-h-0 mx-1 mt-1 flex-1">
-                    <CardHeader className="flex-shrink-0">
-                      <CardTitle className="flex items-center">
-                        {(() => {
-                          const Icon = steps[currentStep].icon;
-                          return <Icon className="w-5 h-5 mr-2 text-orange-600" />;
-                        })()}
-                        {steps[currentStep].title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent
-                      className="flex-1 overflow-y-auto hide-scrollbar min-h-0"
-                      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                    >
-                      {renderStepContent()}
-                    </CardContent>
-                  </Card>
-
-                  {/* Navigation Buttons */}
-                  <div className="sticky bottom-0 bg-white border-t border-gray-200 shadow-lg p-4 flex justify-between">
-                    <Button
-                      variant="outline"
-                      onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-                      disabled={currentStep === 0}
-                    >
-                      Back
-                    </Button>
-                    <div className="space-x-2">
-                      {currentStep < steps.length - 1 ? (
-                        <Button
-                          onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
-                          className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-                        >
-                          Next
-                        </Button>
-                      ) : (
-                        <Button onClick={downloadPDF} className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
-                          <Download className="w-4 h-4 mr-2" />
-                          Download Resume
-                        </Button>
-                      )}
+            {/* RIGHT: download + user */}
+            <div className="flex items-center gap-2 w-[260px] flex-shrink-0 justify-end">
+              <Button onClick={downloadPDF} variant="default">
+                <Download size={14} /> Download
+              </Button>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu((v) => !v)}
+                  className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-lg hover:bg-[#fff7ed] transition-colors"
+                >
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
+                    {initials}
+                  </div>
+                  <span className="text-sm font-medium text-stone-700 hidden sm:block max-w-[100px] truncate">
+                    {displayName}
+                  </span>
+                  <ChevronDown
+                    size={13}
+                    className={`text-stone-400 transition-transform duration-150 ${showUserMenu ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-lg shadow-xl border border-[#fde3c8] overflow-hidden z-50">
+                    <div className="px-4 py-3 border-b border-[#fde3c8] bg-[#fff7ed]">
+                      <p className="text-sm font-bold text-stone-800 truncate">
+                        {displayName}
+                      </p>
+                      <p className="text-xs text-stone-400 truncate">
+                        {user?.email}
+                      </p>
+                    </div>
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          navigate("/dashboard");
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-[#fff7ed] hover:text-[#9a3412] transition-colors"
+                      >
+                        <LayoutDashboard size={15} className="text-stone-400" />{" "}
+                        Dashboard
+                      </button>
+                      <div className="h-px bg-[#fde3c8] mx-2 my-1" />
+                      <button
+                        onClick={async () => {
+                          await supabase.auth.signOut();
+                          navigate("/auth");
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#dc2626] hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut size={15} /> Sign out
+                      </button>
                     </div>
                   </div>
-                </>
+                )}
+              </div>
+            </div>
+          </header>
+          {/* ── END HEADER ─────────────────────────────────────────────── */}
+
+          {/* ── BODY ──────────────────────────────────────────────────────── */}
+          <div className="flex-1 min-h-0 mt-14 absolute display-flex grid grid-cols-1 lg:grid-cols-4 h-[calc(100vh-56px)]">
+            {/* LEFT PANEL */}
+            <div
+              className={`lg:col-span-2 h-[100vh-56px] overflow-y-auto flex flex-col min-h-0 overflow-hidden ${activeView === "preview" ? "hidden" : ""}`}
+            >
+              {/* ── CUSTOMIZE ── */}
+              {activeView === "customize" && (
+                <div className="flex-1 flex flex-col min-h-0 mx-1 mt-1 border border-orange-200 shadow-lg rounded-xl overflow-hidden">
+                  <CustomizePanel
+                    selectedId={selectedId}
+                    onSelectTemplate={setSelectedId}
+                    accentColor={accentColor}
+                    onAccentChange={setAccentColor}
+                  />
+                </div>
+              )}
+
+              {/* ── EDIT ── */}
+              {activeView === "edit" && (
+                <div
+                  ref={editScrollRef}
+                  className="flex-1 overflow-y-auto px-1 pt-1 pb-1 space-y-3"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  {isAllAtOnce && (
+                    <>
+                      {/* Info banner */}
+                      <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-xl text-xs text-orange-700">
+                        <GripVertical size={13} className="flex-shrink-0" />
+                        <span>
+                          Drag the <strong>grip handle</strong> on any section
+                          to reorder. Sections with{" "}
+                          <Lock className="inline w-3 h-3" /> are fixed.
+                        </span>
+                      </div>
+
+                      {orderedSteps.map((stepDef, visualIndex) => {
+                        // For draggable middle steps, find their index within middleOrder
+                        const middleIdx = middleOrder.indexOf(stepDef.id);
+                        const isDraggable = !stepDef.fixed;
+
+                        return (
+                          <div
+                            key={stepDef.id}
+                            data-section-card
+                            {...(isDraggable
+                              ? getSectionDropProps(middleIdx)
+                              : {})}
+                            className="transition-all duration-150"
+                          >
+                            <SectionCard
+                              stepDef={stepDef}
+                              title={stepTitles[stepDef.id]}
+                              defaultTitle={stepDef.defaultTitle}
+                              isOver={
+                                isDraggable && sectionOverIndex === middleIdx
+                              }
+                              dragHandleProps={
+                                isDraggable
+                                  ? getSectionDragProps(middleIdx)
+                                  : {}
+                              }
+                              onTitleCommit={(t) =>
+                                commitSectionTitle(stepDef.id, t)
+                              }
+                              onTitleReset={() => resetSectionTitle(stepDef.id)}
+                              collapsed={!!collapsed[stepDef.id]}
+                              onToggleCollapse={() =>
+                                setCollapsed((prev) => ({
+                                  ...prev,
+                                  [stepDef.id]: !prev[stepDef.id],
+                                }))
+                              }
+                            />
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
+
+                  {!isAllAtOnce && (
+                    <>
+                      <Card className="border-orange-200 shadow-lg rounded-xl flex flex-col">
+                        <CardHeader className="flex-shrink-0 pb-3">
+                          <CardTitle className="flex items-center gap-2 text-sm">
+                            {(() => {
+                              const Icon = wizardSteps[currentStep].icon;
+                              return (
+                                <Icon className="w-4 h-4 text-orange-600 flex-shrink-0" />
+                              );
+                            })()}
+                            <SectionTitleEditor
+                              stepId={wizardSteps[currentStep].id}
+                              title={stepTitles[wizardSteps[currentStep].id]}
+                              defaultTitle={
+                                wizardSteps[currentStep].defaultTitle
+                              }
+                              onCommit={(t) =>
+                                commitSectionTitle(
+                                  wizardSteps[currentStep].id,
+                                  t,
+                                )
+                              }
+                              onReset={() =>
+                                resetSectionTitle(wizardSteps[currentStep].id)
+                              }
+                            />
+                          </CardTitle>
+                          {/* Step progress dots */}
+                          <div className="flex gap-1.5 mt-2">
+                            {wizardSteps.map((s, i) => (
+                              <button
+                                key={s.id}
+                                onClick={() => setCurrentStep(i)}
+                                className={`h-1.5 rounded-full transition-all duration-200 ${
+                                  i === currentStep
+                                    ? "w-5 bg-orange-500"
+                                    : i < currentStep
+                                      ? "w-3 bg-orange-300"
+                                      : "w-3 bg-stone-200"
+                                }`}
+                                title={s.defaultTitle}
+                              />
+                            ))}
+                          </div>
+                        </CardHeader>
+                        <CardContent
+                          className="flex-1 overflow-y-auto hide-scrollbar"
+                          style={{
+                            scrollbarWidth: "none",
+                            msOverflowStyle: "none",
+                          }}
+                        >
+                          <StepContent stepId={wizardSteps[currentStep].id} />
+                        </CardContent>
+                      </Card>
+
+                      {/* Wizard nav */}
+                      <div className="sticky bottom-0 bg-white border-t border-gray-200 shadow-lg p-3 flex justify-between rounded-b-xl">
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            setCurrentStep((p) => Math.max(0, p - 1))
+                          }
+                          disabled={currentStep === 0}
+                        >
+                          Back
+                        </Button>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-stone-400">
+                            {currentStep + 1} / {wizardSteps.length}
+                          </span>
+                          {currentStep < wizardSteps.length - 1 ? (
+                            <Button
+                              onClick={() =>
+                                setCurrentStep((p) =>
+                                  Math.min(wizardSteps.length - 1, p + 1),
+                                )
+                              }
+                              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                            >
+                              Next
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={downloadPDF}
+                              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                            >
+                              <Download className="w-4 h-4 mr-1" /> Download
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
             </div>
 
-            {/* Preview Section — full width in preview mode */}
+            {/* RIGHT PANEL — Resume Preview */}
             <div
-              className={`hide-scrollbar flex flex-col min-h-0 ${activeView === "preview" ? "lg:col-span-4" : "lg:col-span-2"}`}
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              className={`flex flex-col min-h-0 h-[100vh-56px] overflow-y-auto overflow-hidden ${activeView === "preview" ? "lg:col-span-4" : "lg:col-span-2"}`}
             >
               <div
-                className="flex-1 overflow-y-auto hide-scrollbar min-h-0"
+                className="flex-1 overflow-y-auto min-h-0"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
                 <div className="bg-white shadow-lg">
                   <div id="resume-preview-id">
-                    <ResumePreview selectedId={selectedId} accentColor={accentColor} />
-                    </div>
+                    <ResumePreview
+                      selectedId={selectedId}
+                      accentColor={accentColor}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScrollContext.Provider>
     </div>
   );
 }

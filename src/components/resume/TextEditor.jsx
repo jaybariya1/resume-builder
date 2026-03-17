@@ -26,8 +26,9 @@ function RichTextEditor({ value, onChange }) {
   const insertLink = () => {
     const url = prompt("Enter the URL");
     if (url) {
-      formatText("createLink");
+      editorRef.current.focus();
       document.execCommand("createLink", false, url);
+      updateActiveFormats();
     }
   };
 

@@ -8,7 +8,7 @@ const buttonVariants = cva(
   [
     "inline-flex items-center justify-center gap-2 whitespace-nowrap",
     "font-semibold tracking-[-0.01em] text-sm",
-    "rounded-[var(--radius)]",
+    "rounded-sm",
     "transition-all duration-150 ease-out",
     "select-none cursor-pointer",
     "outline-none",

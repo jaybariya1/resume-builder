@@ -93,7 +93,7 @@ function LiveThumb({ Component, selected, defaultAccent, accentColor }) {
 function TabBtn({ active, onClick, label }) {
   return (
     <button onClick={onClick} className="flex-1 py-3 text-sm font-semibold transition-all border-b-2"
-      style={{ color: active ? "#1d4ed8" : "#9ca3af", borderBottomColor: active ? "#1d4ed8" : "transparent", background: "none" }}>
+      style={{ color: active ? "#f97316" : "#9ca3af", borderBottomColor: active ? "#f97316" : "transparent", background: "none" }}>
       {label}
     </button>
   );
@@ -110,19 +110,31 @@ function Toggle({ on, onClick }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function CustomizePanel({ selectedId, onSelectTemplate, accentColor, onAccentChange }) {
+  const { resumeData, setResumeData } = useContext(ResumeInfoContext);
   const [tab, setTab]             = useState("templates");
   const [filter, setFilter]       = useState("All");
-  const [selectedFont, setSelectedFont] = useState("arial");
-  const [selectedSize, setSelectedSize] = useState("12");
+  const [selectedFont, setSelectedFont] = useState(() => {
+    if (!resumeData?.fontFamily) return "arial";
+    const match = FONTS.find(f => f.value === resumeData.fontFamily);
+    return match ? match.id : "arial";
+  });
+  const [selectedSize, setSelectedSize] = useState(() => resumeData?.fontSize || "12");
   const [margin, setMargin]       = useState("Normal");
   const [layout, setLayout]       = useState({ hideSkillLevel: false, compactSpacing: false, showPhoto: false, twoColumn: false });
 
-  const { resumeData, setResumeData } = useContext(ResumeInfoContext);
 
-  // Sync hideSkillLevel from resumeData on mount
+  // Sync settings from resumeData (important for edit mode where data loads async)
   useEffect(() => {
+    if (!resumeData?.id) return; // only sync when a real resume is loaded
     setLayout(prev => ({ ...prev, hideSkillLevel: !!resumeData?.hideSkillLevel }));
-  }, []);
+    if (resumeData.fontFamily) {
+      const match = FONTS.find(f => f.value === resumeData.fontFamily);
+      if (match) setSelectedFont(match.id);
+    }
+    if (resumeData.fontSize) {
+      setSelectedSize(resumeData.fontSize);
+    }
+  }, [resumeData?.id]);
 
   const currentTemplate = TEMPLATES.find(t => t.id === selectedId);
   const supportsColor   = currentTemplate?.supportsColor ?? false;
@@ -140,9 +152,14 @@ export default function CustomizePanel({ selectedId, onSelectTemplate, accentCol
   const toggleLayout = (key) => {
     const next = { ...layout, [key]: !layout[key] };
     setLayout(next);
-    if (key === "hideSkillLevel") {
-      setResumeData(prev => ({ ...prev, hideSkillLevel: next.hideSkillLevel }));
-    }
+    // Persist ALL layout flags to resumeData so templates can read them
+    setResumeData(prev => ({
+      ...prev,
+      hideSkillLevel: next.hideSkillLevel,
+      compactSpacing: next.compactSpacing,
+      showPhoto: next.showPhoto,
+      twoColumnSkills: next.twoColumn,
+    }));
   };
 
   const applyFont = (fontId) => {
@@ -153,6 +170,12 @@ export default function CustomizePanel({ selectedId, onSelectTemplate, accentCol
   const applySize = (size) => {
     setSelectedSize(size);
     setResumeData(prev => ({ ...prev, fontSize: size }));
+  };
+
+  const handleMarginChange = (m) => {
+    setMargin(m);
+    const paddingMap = { Narrow: "32px 40px", Normal: "48px 60px", Wide: "64px 80px" };
+    setResumeData(prev => ({ ...prev, pageMargin: paddingMap[m] }));
   };
 
   const visibleTemplates = filter === "All" ? TEMPLATES : TEMPLATES.filter(t => t.tags.includes(filter));
@@ -264,9 +287,9 @@ export default function CustomizePanel({ selectedId, onSelectTemplate, accentCol
               <div className="flex gap-2">
                 {SIZES.map(s => (
                   <button key={s} onClick={() => applySize(s)}
-                    className="flex-1 py-2 rounded-lg border-2 text-sm font-bold transition-all"
+                    className="flex-1 py-2 rounded-lg border-1 text-sm font-bold transition-all"
                     style={{ borderColor: selectedSize === s ? "#f97316" : "#f3f4f6",
-                      backgroundColor: selectedSize === s ? "#fff7ed" : "white",
+                      backgroundColor: selectedSize === s ? "white" : "white",
                       color: selectedSize === s ? "#f97316" : "#374151" }}>
                     {s}
                   </button>
@@ -280,15 +303,15 @@ export default function CustomizePanel({ selectedId, onSelectTemplate, accentCol
               <p className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">Preview</p>
               <div className="rounded-lg border border-[#fde3c8] p-4 bg-[#fff7ed]">
                 <p className="font-bold text-stone-800 mb-0.5"
-                  style={{ fontFamily: FONTS.find(f => f.id === selectedFont)?.value, fontSize: `${selectedSize}pt` }}>
+                  style={{ fontFamily: FONTS.find(f => f.id === selectedFont)?.value, fontSize: `${selectedSize}px` }}>
                   {resumeData?.firstName || "Your"} {resumeData?.lastName || "Name"}
                 </p>
                 <p className="text-stone-500"
-                  style={{ fontFamily: FONTS.find(f => f.id === selectedFont)?.value, fontSize: `${parseInt(selectedSize) - 1}pt` }}>
+                  style={{ fontFamily: FONTS.find(f => f.id === selectedFont)?.value, fontSize: `${parseInt(selectedSize) - 1}px` }}>
                   {resumeData?.role || "Your Role"} · {resumeData?.email || "email@example.com"}
                 </p>
                 <p className="text-stone-600 mt-1 line-clamp-2"
-                  style={{ fontFamily: FONTS.find(f => f.id === selectedFont)?.value, fontSize: `${parseInt(selectedSize) - 1}pt` }}>
+                  style={{ fontFamily: FONTS.find(f => f.id === selectedFont)?.value, fontSize: `${parseInt(selectedSize) - 1}px` }}>
                   {resumeData?.summary ? resumeData.summary.replace(/<[^>]+>/g, "").slice(0, 120) + "…" : "Your professional summary will appear here."}
                 </p>
               </div>
@@ -324,7 +347,7 @@ export default function CustomizePanel({ selectedId, onSelectTemplate, accentCol
               <p className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-3">Page Margins</p>
               <div className="grid grid-cols-3 gap-2">
                 {["Narrow", "Normal", "Wide"].map(m => (
-                  <button key={m} onClick={() => setMargin(m)}
+                  <button key={m} onClick={() => handleMarginChange(m)}
                     className="py-2.5 rounded-lg border-2 text-xs font-semibold transition-all"
                     style={{ borderColor: margin === m ? "#f97316" : "#e5e7eb",
                       backgroundColor: margin === m ? "#fff7ed" : "white",

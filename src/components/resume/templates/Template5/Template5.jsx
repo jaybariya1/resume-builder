@@ -1,30 +1,29 @@
 import React from "react";
 
-const S = {
+const createStyles = (fontFamily) => ({
   page: {
     width: "794px",
     minHeight: "1123px",
     backgroundColor: "#fff",
     color: "#000",
-    padding: "48px 60px 48px 60px",
-    fontFamily: "'Times New Roman', 'Georgia', serif",
-    fontSize: "11.5px",
+    padding: "48px 60px",
+    fontFamily: fontFamily || "'Times New Roman','Georgia',serif",
+    fontSize: "0.9583em",
     lineHeight: "1.4",
     boxSizing: "border-box",
   },
   name: {
     textAlign: "center",
-    fontFamily: "'Times New Roman', serif",
-    fontSize: "26px",
+    fontFamily: fontFamily || "'Times New Roman', serif",
+    fontSize: "2.1667em",
     fontWeight: "bold",
     margin: "0 0 5px 0",
     letterSpacing: "0.01em",
   },
   contactLine: {
     textAlign: "center",
-    fontSize: "11px",
+    fontSize: "0.9167em",
     margin: "0 0 8px 0",
-    color: "#000",
   },
   headerRule: {
     border: "none",
@@ -37,98 +36,66 @@ const S = {
   sectionHeader: {
     display: "flex",
     alignItems: "flex-end",
-    gap: "0",
     marginBottom: "4px",
   },
   sectionTitle: {
-    fontFamily: "'Times New Roman', serif",
-    fontSize: "12px",
+    fontFamily: fontFamily || "'Times New Roman', serif",
+    fontSize: "1em",
     fontWeight: "bold",
     fontVariant: "small-caps",
     letterSpacing: "0.08em",
-    color: "#000",
     margin: 0,
-    lineHeight: "1",
-    flexShrink: 0,
   },
   sectionRule: {
     flex: 1,
     height: "1px",
     backgroundColor: "#000",
     marginLeft: "6px",
-    alignSelf: "center",
   },
   row: {
     display: "flex",
-    gap: "0",
     marginBottom: "8px",
   },
   dateCol: {
     width: "102px",
     flexShrink: 0,
-    fontFamily: "'Times New Roman', serif",
-    fontSize: "11.5px",
-    color: "#000",
-    paddingTop: "0",
-    lineHeight: "1.4",
+    fontFamily: fontFamily || "'Times New Roman', serif",
   },
   contentCol: {
     flex: 1,
-    minWidth: 0,
   },
   companyRow: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "baseline",
-    marginBottom: "0",
   },
   companyName: {
-    fontFamily: "'Times New Roman', serif",
-    fontSize: "11.5px",
+    fontFamily: fontFamily || "'Times New Roman', serif",
     fontWeight: "bold",
     fontVariant: "small-caps",
-    letterSpacing: "0.04em",
-    color: "#000",
   },
   locationText: {
-    fontFamily: "'Times New Roman', serif",
-    fontSize: "11.5px",
-    color: "#000",
-    fontWeight: "normal",
+    fontFamily: fontFamily || "'Times New Roman', serif",
   },
   jobTitle: {
-    fontFamily: "'Times New Roman', serif",
-    fontSize: "11.5px",
+    fontFamily: fontFamily || "'Times New Roman', serif",
     fontStyle: "italic",
-    color: "#000",
-    margin: "0",
-  },
-  bulletList: {
-    margin: "2px 0 0 0",
-    paddingLeft: "16px",
-    listStyleType: "disc",
-    fontFamily: "'Times New Roman', serif",
-    fontSize: "11.5px",
-    lineHeight: "1.45",
-    color: "#000",
+    margin: 0,
   },
   plainText: {
-    fontFamily: "'Times New Roman', serif",
-    fontSize: "11.5px",
-    lineHeight: "1.45",
-    color: "#000",
-    margin: "2px 0 0 0",
+    fontFamily: fontFamily || "'Times New Roman', serif",
+    margin: "2px 0",
   },
-};
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
+});
 
 function formatMonthYear(val) {
   if (!val) return "";
   if (val.includes("-")) {
     const [y, m] = val.split("-");
-    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    return `${months[parseInt(m,10)-1]} ${y}`;
+    const months = [
+      "Jan","Feb","Mar","Apr","May","Jun",
+      "Jul","Aug","Sep","Oct","Nov","Dec"
+    ];
+    return `${months[parseInt(m, 10) - 1]} ${y}`;
   }
   return val;
 }
@@ -140,67 +107,14 @@ function dateRange(start, end, current) {
   return s || e || "";
 }
 
-// Renders HTML description — strips outer <p> tags and shows as bullet list if <ul><li> present
-function Description({ html }) {
-  if (!html || html === "<p></p>" || html === "<p><br></p>") return null;
-
-  if (html.includes("<li>")) {
-    return (
-      <div
-        style={{
-          margin: "2px 0 0 0",
-          fontFamily: "'Times New Roman', serif",
-          fontSize: "11.5px",
-          lineHeight: "1.45",
-          color: "#000",
-        }}
-        className="preview"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
-    );
-  }
-  return (
-    <div
-      style={S.plainText}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
-}
-
-// Section wrapper with small-caps title + right rule
-function Section({ title, children }) {
-  return (
-    <div style={S.sectionBlock}>
-      <div style={S.sectionHeader}>
-        <h2 style={S.sectionTitle}>{title}</h2>
-        <div style={S.sectionRule} />
-      </div>
-      {children}
-    </div>
-  );
-}
-
-// A row with date on left, content on right
-function DateRow({ date, children }) {
-  return (
-    <div style={S.row}>
-      <div style={S.dateCol}>{date}</div>
-      <div style={S.contentCol}>{children}</div>
-    </div>
-  );
-}
-
-// ─── Main template ──────────────────────────────────────────────────────────
-
 const Template5 = ({ data }) => {
+
   const {
     firstName = "",
     lastName = "",
     email = "",
     phone = "",
     location = "",
-    summary = "",
-    role = "",
     linkedin = "",
     github = "",
     portfolio = "",
@@ -210,27 +124,63 @@ const Template5 = ({ data }) => {
     skills = [],
     project = [],
     hideSkillLevel = false,
+    fontFamily,
+    fontSize,
+    sectionTitles = {},
   } = data;
+
+  const styles = createStyles(fontFamily);
 
   const fullName = [firstName, lastName].filter(Boolean).join(" ");
 
   const contactParts = [
-    location, phone, email, linkedin, github, portfolio, website,
+    location, phone, email, linkedin, github, portfolio, website
   ].filter(Boolean);
 
   const activeExperience = experience.filter(e => e.title || e.company);
   const activeEducation = education.filter(e => e.degree || e.school);
   const activeProjects = project.filter(p => p.title);
-  const skillNames = skills.filter(s => s.name).map(s => s.name);
+
+  const Section = ({ title, children }) => (
+    <div style={styles.sectionBlock}>
+      <div style={styles.sectionHeader}>
+        <h2 style={styles.sectionTitle}>{title}</h2>
+        <div style={styles.sectionRule} />
+      </div>
+      {children}
+    </div>
+  );
+
+  const DateRow = ({ date, children }) => (
+    <div style={styles.row}>
+      <div style={styles.dateCol}>{date}</div>
+      <div style={styles.contentCol}>{children}</div>
+    </div>
+  );
+
+  const Description = ({ html }) => {
+    if (!html) return null;
+    return (
+      <div
+        style={styles.plainText}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    );
+  };
 
   return (
-    <main id="resume-preview" style={S.page}>
+    <main
+      id="resume-preview"
+      style={{
+        ...styles.page,
+        fontSize: fontSize ? `${fontSize}px` : styles.page.fontSize
+      }}
+    >
 
-      {/* ── HEADER ── */}
-      {fullName && <h1 style={S.name}>{fullName}</h1>}
+      {fullName && <h1 style={styles.name}>{fullName}</h1>}
 
       {contactParts.length > 0 && (
-        <p style={S.contactLine}>
+        <p style={styles.contactLine}>
           {contactParts.map((part, i) => (
             <span key={i}>
               {i > 0 && <span style={{ margin: "0 5px" }}>·</span>}
@@ -240,25 +190,23 @@ const Template5 = ({ data }) => {
         </p>
       )}
 
-      <hr style={S.headerRule} />
+      <hr style={styles.headerRule} />
 
-      {/* ── EXPERIENCE ── */}
       {activeExperience.length > 0 && (
-        <Section title="Experience">
-          {activeExperience.map((exp) => {
+        <Section title={sectionTitles[2] || "Experience"}>
+          {activeExperience.map(exp => {
             const range = dateRange(exp.startDate, exp.endDate, exp.current);
             return (
               <DateRow key={exp.id} date={range}>
-                {/* Company + location */}
                 {exp.company && (
-                  <div style={S.companyRow}>
-                    <span style={S.companyName}>{exp.company}</span>
-                    {exp.location && <span style={S.locationText}>{exp.location}</span>}
+                  <div style={styles.companyRow}>
+                    <span style={styles.companyName}>{exp.company}</span>
+                    {exp.location && (
+                      <span style={styles.locationText}>{exp.location}</span>
+                    )}
                   </div>
                 )}
-                {/* Job title */}
-                {exp.title && <p style={S.jobTitle}>{exp.title}</p>}
-                {/* Bullets */}
+                {exp.title && <p style={styles.jobTitle}>{exp.title}</p>}
                 <Description html={exp.description} />
               </DateRow>
             );
@@ -266,20 +214,21 @@ const Template5 = ({ data }) => {
         </Section>
       )}
 
-      {/* ── EDUCATION ── */}
       {activeEducation.length > 0 && (
-        <Section title="Education">
-          {activeEducation.map((edu) => {
-            const range = dateRange(edu.startDate, edu.graduationDate, false);
+        <Section title={sectionTitles[3] || "Education"}>
+          {activeEducation.map(edu => {
+            const range = dateRange(edu.startDate, edu.graduationDate);
             return (
               <DateRow key={edu.id} date={range}>
                 {edu.school && (
-                  <div style={S.companyRow}>
-                    <span style={S.companyName}>{edu.school}</span>
-                    {edu.location && <span style={S.locationText}>{edu.location}</span>}
+                  <div style={styles.companyRow}>
+                    <span style={styles.companyName}>{edu.school}</span>
+                    {edu.location && (
+                      <span style={styles.locationText}>{edu.location}</span>
+                    )}
                   </div>
                 )}
-                {edu.degree && <p style={S.jobTitle}>{edu.degree}</p>}
+                {edu.degree && <p style={styles.jobTitle}>{edu.degree}</p>}
                 <Description html={edu.description} />
               </DateRow>
             );
@@ -287,22 +236,27 @@ const Template5 = ({ data }) => {
         </Section>
       )}
 
-      {/* ── PROJECTS ── */}
       {activeProjects.length > 0 && (
-        <Section title="Projects">
-          {activeProjects.map((proj) => {
+        <Section title={sectionTitles[5] || "Projects"}>
+          {activeProjects.map(proj => {
             const range = dateRange(proj.startDate, proj.endDate, proj.current);
             return (
               <DateRow key={proj.id} date={range}>
-                <div style={S.companyRow}>
-                  <span style={S.companyName}>{proj.title}</span>
-                  {proj.organization && <span style={S.locationText}>{proj.organization}</span>}
+                <div style={styles.companyRow}>
+                  <span style={styles.companyName}>{proj.title}</span>
+                  {proj.organization && (
+                    <span style={styles.locationText}>
+                      {proj.organization}
+                    </span>
+                  )}
                 </div>
+
                 {proj.url && (
-                  <p style={{ ...S.jobTitle, fontStyle: "normal", fontSize: "10.5px", color: "#333" }}>
+                  <p style={{ ...styles.jobTitle, fontStyle: "normal" }}>
                     {proj.url}
                   </p>
                 )}
+
                 <Description html={proj.description} />
               </DateRow>
             );
@@ -310,23 +264,42 @@ const Template5 = ({ data }) => {
         </Section>
       )}
 
-      {/* ── OTHER / SKILLS ── */}
       {skills.filter(s => s.name).length > 0 && (
-        <Section title="Skills">
+        <Section title={sectionTitles[4] || "Skills"}>
           <div style={{ paddingLeft: "102px" }}>
             {skills.filter(s => s.name).map(skill => {
               const filled = (skill.level ?? 2) + 1;
-              const levelLabel = ["Beginner", "Intermediate", "Advanced", "Expert"][skill.level ?? 2];
+              const levelLabel = [
+                "Beginner","Intermediate","Advanced","Expert"
+              ][skill.level ?? 2];
+
               return (
                 <div key={skill.id} style={{ marginBottom: "4px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "11px", fontWeight: "500" }}>{skill.name}</span>
-                    {!hideSkillLevel && <span style={{ fontSize: "9px", color: "#6b7280" }}>{levelLabel}</span>}
+                  <div style={{
+                    display: "flex",
+                    justifyContent: "space-between"
+                  }}>
+                    <span>{skill.name}</span>
+                    {!hideSkillLevel && (
+                      <span style={{ fontSize: "0.75em", color: "#6b7280" }}>
+                        {levelLabel}
+                      </span>
+                    )}
                   </div>
+
                   {!hideSkillLevel && (
                     <div style={{ display: "flex", gap: "2px", marginTop: "2px" }}>
                       {[0,1,2,3].map(i => (
-                        <div key={i} style={{ flex: 1, height: "3px", borderRadius: "9999px", backgroundColor: i < filled ? "#1e293b" : "#e2e8f0" }} />
+                        <div
+                          key={i}
+                          style={{
+                            flex: 1,
+                            height: "3px",
+                            borderRadius: "9999px",
+                            backgroundColor:
+                              i < filled ? "#1e293b" : "#e2e8f0"
+                          }}
+                        />
                       ))}
                     </div>
                   )}
