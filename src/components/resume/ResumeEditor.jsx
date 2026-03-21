@@ -5,6 +5,9 @@ import React, {
   useRef,
   useCallback,
 } from "react";
+
+const RESUME_WIDTH = 794;
+const RESUME_HEIGHT = 1123;
 import { useNavigate, useParams } from "react-router-dom";
 import { ResumeInfoContext } from "../../context/ResumeInfoContext";
 import { useAuth } from "../../context/AuthContext";
@@ -45,6 +48,7 @@ import GeneratingOverlay from "./GeneratingOverlay";
 import TemplatePicker from "./TemplatePicker";
 import CustomizePanel from "./CustomizePanel";
 import { useAutoScroll } from "../../hooks/useAutoScroll";
+import { useExport } from "../../hooks/useExport";
 import { ScrollContext } from "../../context/ScrollContext";
 
 // ─── Step definitions (id matches index for sectionTitles map) ───────────────
@@ -285,9 +289,14 @@ export default function ResumeEditor({ mode }) {
   // ── view / UI state ──────────────────────────────────────────────────────
   const [activeView, setActiveView] = useState("edit");
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const userMenuRef = useRef(null);
+  const exportMenuRef = useRef(null);
   const titleInputRef = useRef(null);
+
+  // ── export ───────────────────────────────────────────────────────────────
+  const { handleExport, exporting } = useExport();
 
   // ── template / accent ────────────────────────────────────────────────────
   const [selectedId, setSelectedId] = useState("modern");
@@ -310,6 +319,10 @@ export default function ResumeEditor({ mode }) {
   // ── drag state (section-level) ───────────────────────────────────────────
   const sectionDragIndex = useRef(null);
   const [sectionOverIndex, setSectionOverIndex] = useState(null);
+
+  // ── preview panel scaling ────────────────────────────────────────────────
+  const previewPanelRef = useRef(null);
+  const [previewScale, setPreviewScale] = useState(1);
 
   // ── auto-scroll for drag in the left edit panel ──────────────────────────
   const {
@@ -377,6 +390,8 @@ export default function ResumeEditor({ mode }) {
     const h = (e) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target))
         setShowUserMenu(false);
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target))
+        setShowExportMenu(false);
     };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
@@ -389,6 +404,24 @@ export default function ResumeEditor({ mode }) {
       titleInputRef.current?.select();
     }
   }, [editingTitle]);
+
+  // ── preview panel scale ──────────────────────────────────────────────────
+  useEffect(() => {
+    const updateScale = () => {
+      if (!previewPanelRef.current) return;
+      const w = previewPanelRef.current.offsetWidth;
+      const h = previewPanelRef.current.offsetHeight;
+      if (activeView === "preview") {
+        setPreviewScale(Math.max(Math.min(w / RESUME_WIDTH, h / RESUME_HEIGHT), 0.1));
+      } else {
+        setPreviewScale(Math.max(w / RESUME_WIDTH, 0.1));
+      }
+    };
+    updateScale();
+    const ro = new ResizeObserver(updateScale);
+    if (previewPanelRef.current) ro.observe(previewPanelRef.current);
+    return () => ro.disconnect();
+  }, [activeView]);
 
   // ── section title helpers ────────────────────────────────────────────────
   const commitSectionTitle = (stepId, newTitle) => {
@@ -460,6 +493,8 @@ export default function ResumeEditor({ mode }) {
   // ── save to DB ────────────────────────────────────────────────────────────
   const saveToDatabase = async (currentData) => {
     if (isSaving.current) return;
+    // Never auto-save if there's no id -- avoids re-creating a deleted resume
+    if (!currentData?.id && mode !== "create") return;
     if (!currentData || isEqual(currentData, lastSavedVersion.current)) {
       setSaveStatus("Saved");
       return;
@@ -514,7 +549,10 @@ export default function ResumeEditor({ mode }) {
 
   useEffect(() => {
     const handler = (e) => {
-      saveResume(mode, mode === "edit" ? id : null, resumeData);
+      // Only save on unload if there is a valid id -- never re-create a deleted resume
+      if (resumeData?.id || mode === "create") {
+        saveResume(mode, mode === "edit" ? id : null, resumeData);
+      }
       e.preventDefault();
       e.returnValue = "";
     };
@@ -522,44 +560,7 @@ export default function ResumeEditor({ mode }) {
     return () => window.removeEventListener("beforeunload", handler);
   }, [resumeData]);
 
-  // ── PDF download ──────────────────────────────────────────────────────────
-  const downloadPDF = () => {
-    const element = document.getElementById("resume-preview");
-    if (!element) return;
-    const styleId = "resume-print-style";
-    let style = document.getElementById(styleId);
-    if (!style) {
-      style = document.createElement("style");
-      style.id = styleId;
-      document.head.appendChild(style);
-    }
-    style.textContent = `
-      @media print {
-        @page { size: 794px 1123px; margin: 0 !important; }
-        body > * { display: none !important; }
-        #resume-print-container { display: block !important; position: fixed !important; inset: 0 !important; z-index: 99999 !important; background: white !important; }
-        #resume-print-container #resume-preview { width: 794px !important; min-height: 1123px !important; margin: 0 !important; box-shadow: none !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        #resume-print-container .mx-auto { margin-left: 0 !important; margin-right: 0 !important; }
-      }`;
-    let container = document.getElementById("resume-print-container");
-    if (!container) {
-      container = document.createElement("div");
-      container.id = "resume-print-container";
-      container.style.display = "none";
-      document.body.appendChild(container);
-    }
-    const parent = element.parentNode;
-    const nextSibling = element.nextSibling;
-    container.appendChild(element);
-    const cleanup = () => {
-      nextSibling
-        ? parent.insertBefore(element, nextSibling)
-        : parent.appendChild(element);
-      style.textContent = "";
-    };
-    window.addEventListener("afterprint", cleanup, { once: true });
-    window.print();
-  };
+  // ── export (PDF / DOCX / TXT) handled by useExport hook ─────────────────
 
   // ── build ordered step list for all-at-once view ──────────────────────────
   const orderedSteps = [
@@ -662,11 +663,51 @@ export default function ResumeEditor({ mode }) {
               </div>
             </div>
 
-            {/* RIGHT: download + user */}
+            {/* RIGHT: export dropdown + user */}
             <div className="flex items-center gap-2 w-[260px] flex-shrink-0 justify-end">
-              <Button onClick={downloadPDF} variant="default">
-                <Download size={14} /> Download
-              </Button>
+              {/* Export dropdown */}
+              <div className="relative" ref={exportMenuRef}>
+                <Button
+                  variant="default"
+                  onClick={() => setShowExportMenu((v) => !v)}
+                  className="flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white pr-3"
+                >
+                  {exporting ? (
+                    <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" /></svg>
+                  ) : (
+                    <Download size={14} />
+                  )}
+                  Download
+                  <ChevronDown size={12} className={`transition-transform duration-150 ${showExportMenu ? "rotate-180" : ""}`} />
+                </Button>
+
+                {showExportMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-[#fde3c8] overflow-hidden z-50">
+                   
+                    {[
+                      { format: "pdf",  label: "Download as PDF", icon: "📄", color: "#dc2626" },
+                      { format: "docx", label: "Download as DOCX",  icon: "📝", color: "#2563eb" },
+                      { format: "txt",  label: "Download as TXT",      icon: "📋", color: "#059669" },
+                    ].map(({ format, label, desc, icon, color }) => (
+                      <button
+                        key={format}
+                        disabled={!!exporting}
+                        onClick={() => { setShowExportMenu(false); handleExport(format); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#fff7ed] transition-colors disabled:opacity-50"
+                      >
+                        <span className="text-xl leading-none">{icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-stone-800">{label}</p>
+                          <p className="text-xs text-stone-400">{desc}</p>
+                        </div>
+                        {exporting === format && (
+                          <svg className="animate-spin flex-shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" /></svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu((v) => !v)}
@@ -723,10 +764,10 @@ export default function ResumeEditor({ mode }) {
           {/* ── END HEADER ─────────────────────────────────────────────── */}
 
           {/* ── BODY ──────────────────────────────────────────────────────── */}
-          <div className="flex-1 min-h-0 mt-14 absolute display-flex grid grid-cols-1 lg:grid-cols-4 h-[calc(100vh-56px)]">
+          <div className="flex-1 min-h-0 mt-14 w-full absolute grid grid-cols-1 lg:grid-cols-4 h-[calc(100vh-56px)]">
             {/* LEFT PANEL */}
             <div
-              className={`lg:col-span-2 h-[100vh-56px] overflow-y-auto flex flex-col min-h-0 overflow-hidden ${activeView === "preview" ? "hidden" : ""}`}
+              className={`lg:col-span-2 overflow-y-auto flex flex-col min-h-0 h-full ${activeView === "preview" ? "hidden" : ""}`}
             >
               {/* ── CUSTOMIZE ── */}
               {activeView === "customize" && (
@@ -744,20 +785,13 @@ export default function ResumeEditor({ mode }) {
               {activeView === "edit" && (
                 <div
                   ref={editScrollRef}
-                  className="flex-1 overflow-y-auto px-1 pt-1 pb-1 space-y-3"
+                  className="flex-1 overflow-y-auto px-1 pt-1  space-y-3"
                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 >
                   {isAllAtOnce && (
                     <>
                       {/* Info banner */}
-                      <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-xl text-xs text-orange-700">
-                        <GripVertical size={13} className="flex-shrink-0" />
-                        <span>
-                          Drag the <strong>grip handle</strong> on any section
-                          to reorder. Sections with{" "}
-                          <Lock className="inline w-3 h-3" /> are fixed.
-                        </span>
-                      </div>
+                      
 
                       {orderedSteps.map((stepDef, visualIndex) => {
                         // For draggable middle steps, find their index within middleOrder
@@ -805,7 +839,7 @@ export default function ResumeEditor({ mode }) {
 
                   {!isAllAtOnce && (
                     <>
-                      <Card className="border-orange-200 shadow-lg rounded-xl flex flex-col">
+                      <Card className="relative border-orange-200 mb-1 rounded-md h-[calc(100vh-125px)] flex flex-col">
                         <CardHeader className="flex-shrink-0 pb-3">
                           <CardTitle className="flex items-center gap-2 text-sm">
                             {(() => {
@@ -861,7 +895,7 @@ export default function ResumeEditor({ mode }) {
                       </Card>
 
                       {/* Wizard nav */}
-                      <div className="sticky bottom-0 bg-white border-t border-gray-200 shadow-lg p-3 flex justify-between rounded-b-xl">
+                      <div className="sticky bottom-0 fixed bg-white border-t border-gray-200 shadow-lg p-3 flex justify-between rounded-t-md">
                         <Button
                           variant="outline"
                           onClick={() =>
@@ -888,10 +922,11 @@ export default function ResumeEditor({ mode }) {
                             </Button>
                           ) : (
                             <Button
-                              onClick={downloadPDF}
+                              onClick={() => handleExport("pdf")}
+                              disabled={!!exporting}
                               className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
                             >
-                              <Download className="w-4 h-4 mr-1" /> Download
+                              <Download className="w-4 h-4 mr-1" /> {exporting === "pdf" ? "Exporting…" : "Download PDF"}
                             </Button>
                           )}
                         </div>
@@ -903,23 +938,47 @@ export default function ResumeEditor({ mode }) {
             </div>
 
             {/* RIGHT PANEL — Resume Preview */}
-            <div
-              className={`flex flex-col min-h-0 h-[100vh-56px] overflow-y-auto overflow-hidden ${activeView === "preview" ? "lg:col-span-4" : "lg:col-span-2"}`}
-            >
+            {activeView === "preview" ? (
               <div
-                className="flex-1 overflow-y-auto min-h-0"
-                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                ref={previewPanelRef}
+                className="flex items-center justify-center h-full w-full bg-gray-100 overflow-hidden lg:col-span-4"
               >
-                <div className="bg-white shadow-lg">
-                  <div id="resume-preview-id">
-                    <ResumePreview
-                      selectedId={selectedId}
-                      accentColor={accentColor}
-                    />
-                  </div>
+                <div
+                  id="resume-preview-id"
+                  style={{
+                    width: RESUME_WIDTH,
+                    height: RESUME_HEIGHT,
+                    transform: `scale(${previewScale})`,
+                    transformOrigin: "center center",
+                    flexShrink: 0,
+                    boxShadow: "0 4px 32px rgba(0,0,0,0.13)",
+                  }}
+                >
+                  <ResumePreview selectedId={selectedId} accentColor={accentColor} />
                 </div>
               </div>
-            </div>
+            ) : (
+              <div
+                ref={previewPanelRef}
+                className="flex flex-col items-center h-full w-full bg-gray-100 overflow-x-hidden overflow-y-auto lg:col-span-2"
+                style={{ scrollbarWidth: "thin" }}
+              >
+                <div
+                  id="resume-preview-id"
+                  style={{
+                    width: RESUME_WIDTH,
+                    height: RESUME_HEIGHT,
+                    transform: `scale(${previewScale})`,
+                    transformOrigin: "top center",
+                    flexShrink: 0,
+                    marginBottom: `${(RESUME_HEIGHT * previewScale) - RESUME_HEIGHT}px`,
+                    boxShadow: "0 4px 32px rgba(0,0,0,0.13)",
+                  }}
+                >
+                  <ResumePreview selectedId={selectedId} accentColor={accentColor} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </ScrollContext.Provider>

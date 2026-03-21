@@ -71,15 +71,14 @@ const EducationStep = () => {
     <div className="space-y-3">
       <div>
         <h3 className="font-semibold text-foreground mb-1">Education</h3>
-        <p className="text-xs text-muted-foreground">
-          Drag <GripVertical className="inline w-3 h-3" /> to reorder entries.
-        </p>
+        
       </div>
 
       {education.map((edu, index) => {
         const isCollapsed = !!collapsed[edu.id];
         const isOver      = overIndex === index;
-        const label       = [edu.degree, edu.school].filter(Boolean).join(" · ") || `Education #${index + 1}`;
+        const filledE = [edu.degree, edu.school].filter(Boolean);
+        const label = filledE.length > 0 ? filledE.join(" · ") : <span className="italic text-stone-400">(not specified)</span>;
 
         return (
           <div

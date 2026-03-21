@@ -55,7 +55,9 @@ export default function Header() {
               How It Works
             </a>
             {isAuthenticated && (
-              <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>Dashboard</Button>
+              <a href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">
+                Dashboard
+              </a>
             )}
           </nav>
 

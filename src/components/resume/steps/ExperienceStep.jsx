@@ -76,15 +76,14 @@ const ExperienceStep = () => {
     <div className="space-y-3">
       <div>
         <h3 className="font-semibold text-foreground mb-1">Work Experience</h3>
-        <p className="text-xs text-muted-foreground">
-          Drag <GripVertical className="inline w-3 h-3" /> to reorder entries.
-        </p>
+        
       </div>
 
       {experiences.map((exp, index) => {
         const isCollapsed = !!collapsed[exp.id];
         const isOver      = overIndex === index;
-        const label       = [exp.title, exp.company].filter(Boolean).join(" @ ") || `Experience #${index + 1}`;
+        const filled = [exp.title, exp.company].filter(Boolean);
+        const label = filled.length > 0 ? filled.join(" @ ") : <span className="italic text-stone-400">(not specified)</span>;
 
         return (
           <div
@@ -167,11 +166,7 @@ const ExperienceStep = () => {
                       <Sparkles className="w-3 h-3" /> AI Assistant
                     </Button>
                   </div>
-                  {!exp.title && (
-                    <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2">
-                      💡 Enter a Job Title to unlock AI writing
-                    </p>
-                  )}
+                  
                   <RichTextEditor value={exp.description} onChange={(val) => updateExperience(exp.id, "description", val)} />
                 </div>
               </div>

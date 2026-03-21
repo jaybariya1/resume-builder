@@ -130,7 +130,11 @@ const SectionPanel = ({ section }) => {
           <CardContent className="p-4">
             <div className="flex justify-between items-center mb-3">
               <span className="text-xs font-medium text-muted-foreground">
-                {section.title} #{index + 1}
+                {(() => {
+                  const primaryKey = section.fields[0]?.key;
+                  const primaryVal = primaryKey && item[primaryKey]?.trim();
+                  return primaryVal || <span className="italic text-stone-400">(not specified)</span>;
+                })()}
               </span>
               <Button variant="ghost" size="icon-sm" onClick={() => removeItem(item.id)} className="text-muted-foreground hover:text-red-500 hover:bg-red-50 h-6 w-6">
                 <Trash size={13} />

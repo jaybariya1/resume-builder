@@ -143,10 +143,14 @@ export default function CustomizePanel({ selectedId, onSelectTemplate, accentCol
 
   const handleSelectTemplate = (id) => {
     onSelectTemplate(id);
-    // Reset accent when switching to a template that doesn't support color
     const tpl = TEMPLATES.find(t => t.id === id);
-    if (!tpl?.supportsColor) onAccentChange(null);
-    else onAccentChange(null); // reset to default of new template
+    if (!tpl?.supportsColor) {
+      // Fixed color templates — clear any custom accent
+      onAccentChange(null);
+    } else {
+      // Apply the template's default accent color immediately
+      onAccentChange(tpl.defaultAccent);
+    }
   };
 
   const toggleLayout = (key) => {

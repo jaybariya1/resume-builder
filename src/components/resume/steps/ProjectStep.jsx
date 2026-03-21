@@ -76,15 +76,14 @@ const ProjectStep = () => {
     <div className="space-y-3">
       <div>
         <h3 className="font-semibold text-foreground mb-1">Projects</h3>
-        <p className="text-xs text-muted-foreground">
-          Drag <GripVertical className="inline w-3 h-3" /> to reorder entries.
-        </p>
+        
       </div>
 
       {projects.map((proj, index) => {
         const isCollapsed = !!collapsed[proj.id];
         const isOver      = overIndex === index;
-        const label       = [proj.title, proj.tech].filter(Boolean).join(" · ") || `Project #${index + 1}`;
+        const filledP = [proj.title, proj.tech].filter(Boolean);
+        const label = filledP.length > 0 ? filledP.join(" · ") : <span className="italic text-stone-400">(not specified)</span>;
 
         return (
           <div

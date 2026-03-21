@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -55,8 +55,27 @@ function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
   const [deleting, setDeleting] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmRef = React.useRef(null);
   const content = resume.content || {};
   const pct = completeness(content);
+
+  // Dismiss confirm popover on outside click (replaces unreliable onBlur)
+  React.useEffect(() => {
+    if (!confirmDelete) return;
+    const handler = (e) => {
+      if (confirmRef.current && !confirmRef.current.contains(e.target))
+        setConfirmDelete(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [confirmDelete]);
+
+  const handleDeleteClick = async () => {
+    setDeleting(true);
+    await onDelete(resume.id);
+    setDeleting(false);
+    setConfirmDelete(false);
+  };
   const skillCount = (content.skills || []).filter(s => s.name).length;
   const expCount = (content.experience || []).filter(e => e.title).length;
 
@@ -68,10 +87,10 @@ function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
       {/* Top row */}
       <div className="flex items-start gap-3">
         {/* Icon */}
-        <div className="flex-shrink-0 w-10 h-12 rounded-md bg-[#fff7ed] border border-[#fde3c8] flex flex-col items-center justify-center gap-0.5">
+        <div className="flex-shrink-0 w-10 h-12 rounded-md border border-[#fde3c8] flex flex-col items-center justify-center gap-0.5">
           <FileText className="h-4 w-4 text-orange-500" />
           <div className="flex gap-0.5">
-            {[1,2,3].map(i => <div key={i} className="h-0.5 w-1.5 rounded-full bg-orange-200" />)}
+            {[1,2,3].map(i => <div key={i} className="h-0.5 w-1.5 rounded-full" />)}
           </div>
         </div>
 
@@ -91,6 +110,7 @@ function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
 
         {/* Action buttons — always visible on mobile, hover on desktop */}
         <div
+          ref={confirmRef}
           className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0"
           onClick={e => e.stopPropagation()}
         >
@@ -101,11 +121,11 @@ function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
             <Copy className="h-3.5 w-3.5" />
           </Button>
           {confirmDelete ? (
-            <Button variant="destructive" size="xs" disabled={deleting} onClick={async () => { setDeleting(true); await onDelete(resume.id); setDeleting(false); setConfirmDelete(false); }}>
+            <Button variant="destructive" size="xs" disabled={deleting} onClick={handleDeleteClick}>
               {deleting ? "…" : "Sure?"}
             </Button>
           ) : (
-            <Button variant="ghost" size="icon-sm" title="Delete" onClick={() => setConfirmDelete(true)} onBlur={() => setTimeout(() => setConfirmDelete(false), 200)} className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-50">
+            <Button variant="ghost" size="icon-sm" title="Delete" onClick={() => setConfirmDelete(true)} className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-50">
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           )}
@@ -191,18 +211,36 @@ export default function Dashboard() {
 
   const fetchResumes = async () => {
     setLoading(true);
+    const { data: { user: u } } = await supabase.auth.getUser();
+    if (!u) { setLoading(false); return; }
     const { data, error } = await supabase
       .from("resumes")
       .select("id, title, updated_at, content")
-      .eq("user_id", user.id)
+      .eq("user_id", u.id)
       .order("updated_at", { ascending: false });
     if (!error) setResumes(data || []);
     setLoading(false);
   };
 
   const handleDelete = async (id) => {
-    const { error } = await supabase.from("resumes").delete().eq("id", id);
-    if (!error) setResumes(prev => prev.filter(r => r.id !== id));
+    const { data: { user: u } } = await supabase.auth.getUser();
+    if (!u) return;
+    const { error } = await supabase
+      .from("resumes")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", u.id);
+    if (!error) {
+      setResumes(prev => prev.filter(r => r.id !== id));
+      // Clear localStorage draft so auto-save cannot re-create this resume
+      try {
+        const draft = JSON.parse(localStorage.getItem("resume_draft") || "{}");
+        if (draft?.id === id) localStorage.removeItem("resume_draft");
+      } catch (_) {}
+    } else {
+      console.error("Delete failed:", error);
+      alert("Could not delete resume. Please try again.");
+    }
   };
 
   const handleDuplicate = async (resume) => {
@@ -250,7 +288,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+    <div className="min-h-screen bg-white from-orange-50 via-white to-amber-50">
 
       {/* ── TOPBAR ── */}
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -304,7 +342,7 @@ export default function Dashboard() {
         <div className="mb-8">
           <p className="text-sm text-orange-600 font-semibold mb-1">Dashboard</p>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            {greeting}, {firstName} 👋
+            {greeting}, {firstName} 
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {resumes.length === 0

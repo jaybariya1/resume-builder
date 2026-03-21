@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useContext } from "react";
 import { TEMPLATES } from './templates';
-import { useContext } from "react";
 import { ResumeInfoContext } from "../../context/ResumeInfoContext";
 
 const ResumePreview = ({ selectedId = "modern", accentColor }) => {
@@ -8,14 +7,10 @@ const ResumePreview = ({ selectedId = "modern", accentColor }) => {
   const SelectedTemplate = TEMPLATES[selectedId]?.component;
 
   if (!SelectedTemplate) {
-    return <div>Template not found</div>;
+    return <div className="flex items-center justify-center h-full text-gray-400">Template not found</div>;
   }
 
-  return (
-    <div className="w-full h-full flex items-center justify-center bg-gray-100">
-      <SelectedTemplate data={resumeData} accentColor={accentColor} />
-    </div>
-  );
+  return <SelectedTemplate data={resumeData} accentColor={accentColor} />;
 };
 
 export default ResumePreview;

@@ -53,11 +53,19 @@ export const ResumeInfoProvider = ({ children }) => {
   // localStorage restore intentionally removed.
   // Data is initialised by CreateResume (scratch/prefilled) or loadResumeById (edit).
 
+  // Only persist when there is an actual saved resume (has an id).
+  // This prevents a deleted resume from being re-saved via auto-save.
   useEffect(() => {
-    if (Object.keys(resumeData).length > 0) {
+    if (resumeData?.id) {
       localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(resumeData));
     }
   }, [resumeData]);
+
+  // Call after a successful delete so stale data cannot re-save the resume.
+  const clearDraft = () => {
+    localStorage.removeItem(LOCAL_DRAFT_KEY);
+    setResumeData((prev) => ({ ...prev, id: null }));
+  };
 
 
 
@@ -156,7 +164,7 @@ const loadResumeById = async (resumeId) => {
    
 
   return (
-    <ResumeInfoContext.Provider value={{ resumeData, setResumeData, inputFields, setInputFields, isGenerating, setIsGenerating, saveResume, loading, loadResumeById }}>
+    <ResumeInfoContext.Provider value={{ resumeData, setResumeData, inputFields, setInputFields, isGenerating, setIsGenerating, saveResume, loading, loadResumeById, clearDraft }}>
       {children}
     </ResumeInfoContext.Provider>
   );

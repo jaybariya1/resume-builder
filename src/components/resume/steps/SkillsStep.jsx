@@ -116,9 +116,7 @@ const SkillsStep = () => {
     <div className="space-y-4">
       <div>
         <h3 className="font-semibold text-foreground mb-1">Skills</h3>
-        <p className="text-xs text-muted-foreground">
-          Add your skills. Drag <GripVertical className="inline w-3 h-3" /> to reorder.
-        </p>
+        
       </div>
 
       {/* Toggle level visibility */}
