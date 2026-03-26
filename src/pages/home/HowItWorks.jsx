@@ -27,7 +27,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-20 px-30 sm:py-32 bg-gradient-to-br from-orange-50 to-amber-50">
+    <section id="how-it-works" className="py-20 px-30 sm:py-32 ">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <Badge variant="secondary" className="mb-4">

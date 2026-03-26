@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { ResumeInfoProvider, ResumeInfoContext } from "../context/ResumeInfoContext";
 import ResumeEditor from "../components/resume/ResumeEditor";
 import ResumeStartModal from "../components/resume/ResumeStartModal";
+import { useParams } from "react-router-dom";
 
-function CreateResumeInner({ mode }) {
+function CreateResumeInner({ mode  }) {
   const navigate = useNavigate();
   const { setResumeData } = useContext(ResumeInfoContext);
   const [ready, setReady] = useState(mode === "edit");

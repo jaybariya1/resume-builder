@@ -21,6 +21,7 @@ import SkillsStep from "./steps/SkillsStep";
 import ProjectStep from "./steps/ProjectStep";
 import AdditionalStep from "./steps/AdditionalStep";
 import { Button } from "../ui/button";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   LayoutDashboard,
@@ -135,7 +136,7 @@ function SectionTitleEditor({
         <span className="relative inline-flex items-center">
           <span
             aria-hidden
-            className="invisible absolute whitespace-pre text-sm font-semibold pointer-events-none"
+            className="invisible absolute whitespace-pr  font-semibold pointer-events-none"
           >
             {draft.length >= 7 ? draft : "XXXXXXX"}
           </span>
@@ -148,13 +149,13 @@ function SectionTitleEditor({
               if (e.key === "Enter") commit();
               if (e.key === "Escape") setEditing(false);
             }}
-            style={{ width: `max(${Math.max(7, draft.length)}ch, 7ch)` }}
-            className="border-b-2 outline-none focus:border-[#f97316] selection:bg-orange-100 text-sm font-semibold bg-transparent"
+            style={{ width: `min(max(${Math.max(7, draft.length)}ch, 7ch),30ch)` }}
+            className="border-b-2 text-lg outline-none focus:border-[#f97316] selection:bg-orange-100  font-semibold bg-transparent"
           />
         </span>
       ) : (
         <>
-          <span className="truncate">{title}</span>
+          <span className="font-semibold truncate text-lg pb-0.5" s>{title}</span>
           {!isModified && (
             <button
               onClick={() => setEditing(true)}
@@ -282,6 +283,10 @@ function SectionCard({
 export default function ResumeEditor({ mode }) {
   const navigate = useNavigate();
   const { id } = useParams();
+  
+  const [searchParams] = useSearchParams();
+  const templateId =searchParams.get("template");
+
   const { user } = useAuth();
   const { resumeData, setResumeData, saveResume, loadResumeById } =
     useContext(ResumeInfoContext);
@@ -299,7 +304,7 @@ export default function ResumeEditor({ mode }) {
   const { handleExport, exporting } = useExport();
 
   // ── template / accent ────────────────────────────────────────────────────
-  const [selectedId, setSelectedId] = useState("modern");
+  const [selectedId, setSelectedId] = useState(templateId?templateId:"modern");
   const [accentColor, setAccentColor] = useState(null);
 
   // ── save status ──────────────────────────────────────────────────────────
@@ -355,6 +360,7 @@ export default function ResumeEditor({ mode }) {
 
   // ── sync template/accent → resumeData ────────────────────────────────────
   useEffect(() => {
+  
     setResumeData((prev) => ({ ...prev, templateId: selectedId }));
   }, [selectedId]);
   useEffect(() => {
@@ -583,7 +589,7 @@ export default function ResumeEditor({ mode }) {
       <TemplatePicker
         isOpen={false}
         onClose={() => {}}
-        selectedId={selectedId}
+        selectedId={selectedId} 
         onSelect={setSelectedId}
       />
 
@@ -614,14 +620,14 @@ export default function ResumeEditor({ mode }) {
                       setEditingTitle(false);
                   }}
                   placeholder="Untitled Resume"
-                  className="flex-1 min-w-0 text-sm font-semibold outline-none border-b-2 border-[#fdba74] focus:border-[#f97316] selection:bg-orange-100 transition-all"
+                  className="flex-1 min-w-0 text-lg font-semibold outline-none border-b-2 border-[#fdba74] focus:border-[#f97316] selection:bg-orange-100 transition-all"
                 />
               ) : (
                 <button
                   onClick={() => setEditingTitle(true)}
                   className="flex items-center gap-1.5 group flex-1 min-w-0"
                 >
-                  <span className="text-sm font-semibold pb-0.5 text-stone-800 truncate">
+                  <span className="text-lg font-semibold pb-0.5 text-stone-800 truncate">
                     {resumeData.title || "Untitled Resume"}
                   </span>
                   <Pencil

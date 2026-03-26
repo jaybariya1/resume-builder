@@ -4,25 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
   Plus, FileText, Edit3, Trash2, Copy, Search,
-  Clock, LogOut, Sparkles, ChevronRight, LayoutDashboard,
-  Briefcase, GraduationCap, Code2, Award, User2,
-  TrendingUp, Zap, Home,
+  Sparkles, Briefcase, TrendingUp, BarChart2,
+  Download, ChevronDown,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function timeAgo(dateString) {
-  const now = new Date();
+function formatDate(dateString) {
   const date = new Date(dateString);
-  const diff = Math.floor((now - date) / 1000);
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return date.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
 }
 
 function completeness(content = {}) {
@@ -37,19 +27,78 @@ function completeness(content = {}) {
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
 }
 
-function CompletenessBar({ pct }) {
-  const color = pct >= 80 ? "bg-amber-500" : pct >= 50 ? "bg-orange-500" : "bg-red-400";
+// ─── Mini Resume Preview Thumbnail ───────────────────────────────────────────
+
+function ResumePreviewThumb({ content = {} }) {
+  const name = [content.firstName, content.lastName].filter(Boolean).join(" ") || "Your Name";
+  const role = content.role || "";
+  const hasExp = (content.experience || []).some(e => e.title);
+  const hasEdu = (content.education || []).some(e => e.degree || e.school);
+  const hasSummary = !!content.summary;
+
   return (
-    <div className="flex items-center gap-2 mt-1.5">
-      <div className="flex-1 h-1 rounded-full bg-orange-100 overflow-hidden">
-        <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+    <div
+      className="w-full h-full bg-white overflow-hidden select-none"
+      style={{ fontFamily: "Georgia, serif", fontSize: "3.5px", lineHeight: 1.4, color: "#222", padding: "10px 10px" }}
+    >
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: "4px", paddingBottom: "3px", borderBottom: "0.5px solid #ccc" }}>
+        <div style={{ fontSize: "6px", fontWeight: 700, letterSpacing: "0.3px" }}>{name}</div>
+        {role && <div style={{ fontSize: "3.5px", color: "#555", marginTop: "1px" }}>{role}</div>}
+        <div style={{ fontSize: "2.8px", color: "#888", marginTop: "0.5px" }}>
+          {[content.email, content.phone, content.location].filter(Boolean).join("  ·  ")}
+        </div>
       </div>
-      <span className="text-[10px] font-medium text-muted-foreground w-7 text-right">{pct}%</span>
+
+      {hasSummary && (
+        <div style={{ marginBottom: "3px" }}>
+          <div style={{ fontSize: "3px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "0.3px solid #bbb", marginBottom: "1.5px", paddingBottom: "0.5px" }}>Profile</div>
+          <div style={{ fontSize: "2.8px", color: "#444", lineHeight: 1.5 }}>
+            {(content.summary || "").replace(/<[^>]*>/g, "").slice(0, 140)}
+          </div>
+        </div>
+      )}
+
+      {hasExp && (
+        <div style={{ marginBottom: "3px" }}>
+          <div style={{ fontSize: "3px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "0.3px solid #bbb", marginBottom: "1.5px", paddingBottom: "0.5px" }}>Experience</div>
+          {(content.experience || []).slice(0, 2).map((exp, i) => (
+            <div key={i} style={{ marginBottom: "1.5px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "3.2px", fontWeight: 600 }}>{exp.title}</span>
+                <span style={{ fontSize: "2.5px", color: "#888" }}>{exp.startDate} – {exp.endDate || "Present"}</span>
+              </div>
+              <div style={{ fontSize: "2.8px", color: "#555", marginTop: "0.3px" }}>{exp.company}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {hasEdu && (
+        <div style={{ marginBottom: "3px" }}>
+          <div style={{ fontSize: "3px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "0.3px solid #bbb", marginBottom: "1.5px", paddingBottom: "0.5px" }}>Education</div>
+          {(content.education || []).slice(0, 1).map((edu, i) => (
+            <div key={i}>
+              <span style={{ fontSize: "3.2px", fontWeight: 600 }}>{edu.degree}</span>
+              <div style={{ fontSize: "2.8px", color: "#555" }}>{edu.school}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Skeleton placeholder lines when no content */}
+      {!hasSummary && !hasExp && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "2.5px" }}>
+          {[80, 65, 90, 55, 72, 88, 60].map((w, i) => (
+            <div key={i} style={{ height: "2px", width: `${w}%`, background: "#e5e7eb", borderRadius: "1px" }} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-// ─── Resume Card ─────────────────────────────────────────────────────────────
+// ─── Resume Card ──────────────────────────────────────────────────────────────
 
 function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
   const [deleting, setDeleting] = useState(false);
@@ -57,9 +106,7 @@ function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const confirmRef = React.useRef(null);
   const content = resume.content || {};
-  const pct = completeness(content);
 
-  // Dismiss confirm popover on outside click (replaces unreliable onBlur)
   React.useEffect(() => {
     if (!confirmDelete) return;
     const handler = (e) => {
@@ -76,76 +123,94 @@ function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
     setDeleting(false);
     setConfirmDelete(false);
   };
-  const skillCount = (content.skills || []).filter(s => s.name).length;
-  const expCount = (content.experience || []).filter(e => e.title).length;
 
   return (
-    <div
-      className="group relative flex flex-col gap-3 p-4 rounded-lg border border-[#fde3c8] bg-white hover:border-[#fdba74] hover:shadow-md transition-all duration-200 cursor-pointer"
-      onClick={() => onEdit(resume.id)}
-    >
-      {/* Top row */}
-      <div className="flex items-start gap-3">
-        {/* Icon */}
-        <div className="flex-shrink-0 w-10 h-12 rounded-md border border-[#fde3c8] flex flex-col items-center justify-center gap-0.5">
-          <FileText className="h-4 w-4 text-orange-500" />
-          <div className="flex gap-0.5">
-            {[1,2,3].map(i => <div key={i} className="h-0.5 w-1.5 rounded-full" />)}
-          </div>
-        </div>
+    <div className="flex gap-4 p-4 rounded-sm border border-gray-200 bg-white hover:shadow-sm transition-all duration-200">
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-foreground truncate leading-tight">
-            {resume.title || "Untitled Resume"}
-          </h3>
-          {content.role && (
-            <p className="text-xs text-orange-600 font-medium truncate mt-0.5">{content.role}</p>
-          )}
-          <div className="flex items-center gap-1 mt-1">
-            <Clock className="h-3 w-3 text-muted-foreground/50" />
-            <span className="text-[11px] text-muted-foreground/60">{timeAgo(resume.updated_at)}</span>
-          </div>
-        </div>
-
-        {/* Action buttons — always visible on mobile, hover on desktop */}
-        <div
-          ref={confirmRef}
-          className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0"
-          onClick={e => e.stopPropagation()}
-        >
-          <Button variant="ghost" size="icon-sm" title="Edit" onClick={() => onEdit(resume.id)} className="h-7 w-7 text-muted-foreground hover:text-orange-600">
-            <Edit3 className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon-sm" title="Duplicate" disabled={duplicating} onClick={async () => { setDuplicating(true); await onDuplicate(resume); setDuplicating(false); }} className="h-7 w-7 text-muted-foreground hover:text-orange-500">
-            <Copy className="h-3.5 w-3.5" />
-          </Button>
-          {confirmDelete ? (
-            <Button variant="destructive" size="xs" disabled={deleting} onClick={handleDeleteClick}>
-              {deleting ? "…" : "Sure?"}
-            </Button>
-          ) : (
-            <Button variant="ghost" size="icon-sm" title="Delete" onClick={() => setConfirmDelete(true)} className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-50">
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          )}
-        </div>
+      {/* Left — A4 thumbnail */}
+      <div
+        className="flex-shrink-0 rounded-sm border border-gray-200 overflow-hidden cursor-pointer hover:border-orange-400 hover:shadow-md transition-all duration-200"
+        style={{ width: 200, height: 283 }}
+        onClick={() => onEdit(resume.id)}
+        title="Open resume"
+      >
+        <ResumePreviewThumb content={content} />
       </div>
 
-      {/* Completeness bar */}
-      <CompletenessBar pct={pct} />
+      {/* Right — Info + actions */}
+      <div className="flex flex-col flex-1  min-w-0 py-0.5" ref={confirmRef}>
+        {/* Title */}
+        <div className="flex items-center gap-1 mb-0.5">
+          <h2
+            className="text-base font-semibold text-xl text-gray-900 leading-snug cursor-pointer hover:text-orange-600 transition-colors truncate"
+            onClick={() => onEdit(resume.id)}
+          >
+            {resume.title || "Untitled"}
+          </h2>
+          <button
+            className="flex-shrink-0 text-gray-400 hover:text-orange-500 transition-colors"
+            onClick={() => onEdit(resume.id)}
+            title="Edit"
+          >
+            <Edit3 className="h-3.5 w-3.5" />
+          </button>
+        </div>
 
-      {/* Tags */}
-      <div className="flex gap-1.5 flex-wrap">
-        {expCount > 0 && (
-          <Badge variant="secondary">{expCount} exp</Badge>
-        )}
-        {skillCount > 0 && (
-          <Badge variant="warm">{skillCount} skills</Badge>
-        )}
-        {pct === 100 && (
-          <Badge variant="outline">✓ Complete</Badge>
-        )}
+        {/* Date */}
+        <p className="text-sm text-gray-400 mb-4">
+          Updated {formatDate(resume.updated_at)}
+        </p>
+
+        {/* Action list */}
+        <div className="space-y-2" onClick={e => e.stopPropagation()}>
+
+          {/* Download PDF */}
+          <button
+            className="flex items-center gap-2.5 text-md text-gray-700 hover:text-orange-600 transition-colors w-full text-left"
+            onClick={() => onEdit(resume.id)}
+          >
+            <div className="w-7 h-7  flex items-center justify-center flex-shrink-0">
+              <Download className="h-4.5 w-4.5 text-orange-500" />
+            </div>
+            Download PDF
+          </button>
+
+          {/* Copy */}
+          <button
+            className="flex items-center gap-2.5 text-md text-gray-700 hover:text-orange-500 transition-colors w-full text-left disabled:opacity-50"
+            disabled={duplicating}
+            onClick={async () => { setDuplicating(true); await onDuplicate(resume); setDuplicating(false); }}
+          >
+            <div className="w-7 h-7  flex items-center justify-center flex-shrink-0">
+              <Copy className="h-4.5 w-4.5 text-orange-500" />
+            </div>
+            {duplicating ? "Copying…" : "Copy Resume"}
+          </button>
+
+          {/* Delete */}
+          {confirmDelete ? (
+            <button
+              className="flex items-center gap-2.5 text-md text-orange-500    transition-colors w-full text-left disabled:opacity-50"
+              disabled={deleting}
+              onClick={handleDeleteClick}
+            >
+              <div className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="h-4.5 w-4.5 text-orange-500" />
+              </div>
+              {deleting ? "Deleting…" : "Confirm Delete?"}
+            </button>
+          ) : (
+            <button
+              className="flex items-center gap-2.5 text-md text-gray-700 hover:text-orange-600 transition-colors w-full text-left group/del"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <div className="w-7 h-7 flex items-center justify-center flex-shrink-0 transition-colors">
+                <Trash2 className="h-4.5 w-4.5 text-orange-500 transition-colors" />
+              </div>
+              Delete Resume
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -153,47 +218,16 @@ function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
-function StatCard({ icon: Icon, label, value, accent = "orange" }) {
-  const colors = {
-    orange: "from-orange-500 to-red-500",
-    blue:   "from-orange-400 to-orange-500",
-    green:  "from-amber-500 to-orange-500",
-    purple: "from-red-400 to-red-500",
-  };
+function StatCard({ label, value, Icon, iconBg, iconColor }) {
   return (
-    <div className="flex items-center gap-4 p-4 rounded-lg bg-white border border-[#fde3c8] shadow-sm">
-      <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${colors[accent]} shadow-sm`}>
-        <Icon className="h-5 w-5 text-white" />
-      </div>
-      <div>
-        <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-      </div>
-    </div>
-  );
-}
-
-// ─── Empty State ──────────────────────────────────────────────────────────────
-
-function EmptyState({ onCreate }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-      <div className="relative mb-6">
-        <div className="w-20 h-20 rounded-lg bg-[#fff7ed] border border-[#fde3c8] flex items-center justify-center">
-          <FileText className="h-9 w-9 text-orange-400" />
-        </div>
-        <div className="absolute -right-1 -top-1 w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
-          <Plus className="h-3.5 w-3.5 text-white" />
+    <div className="flex flex-col justify-between p-5 rounded-xl border border-gray-200 bg-white min-h-[96px]">
+      <div className="flex items-start justify-between mb-3">
+        <p className="text-sm text-gray-500">{label}</p>
+        <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center`}>
+          <Icon className={`${iconColor}`} style={{ width: 18, height: 18 }} />
         </div>
       </div>
-      <h3 className="text-lg font-bold text-foreground mb-2">No resumes yet</h3>
-      <p className="text-sm text-muted-foreground mb-6 max-w-xs leading-relaxed">
-        Create your first AI-powered resume in minutes and start landing more interviews.
-      </p>
-      <Button onClick={onCreate} size="lg">
-        <Sparkles className="h-4 w-4" />
-        Create Your First Resume
-      </Button>
+      <p className="text-3xl font-bold text-gray-900 tracking-tight">{value}</p>
     </div>
   );
 }
@@ -225,20 +259,14 @@ export default function Dashboard() {
   const handleDelete = async (id) => {
     const { data: { user: u } } = await supabase.auth.getUser();
     if (!u) return;
-    const { error } = await supabase
-      .from("resumes")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", u.id);
+    const { error } = await supabase.from("resumes").delete().eq("id", id).eq("user_id", u.id);
     if (!error) {
       setResumes(prev => prev.filter(r => r.id !== id));
-      // Clear localStorage draft so auto-save cannot re-create this resume
       try {
         const draft = JSON.parse(localStorage.getItem("resume_draft") || "{}");
         if (draft?.id === id) localStorage.removeItem("resume_draft");
       } catch (_) {}
     } else {
-      console.error("Delete failed:", error);
       alert("Could not delete resume. Please try again.");
     }
   };
@@ -247,14 +275,8 @@ export default function Dashboard() {
     const { data: { user: u } } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("resumes")
-      .insert({
-        user_id: u.id,
-        title: `${resume.title || "Untitled"} (Copy)`,
-        content: resume.content,
-        updated_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
+      .insert({ user_id: u.id, title: `${resume.title || "Untitled"} (Copy)`, content: resume.content, updated_at: new Date().toISOString() })
+      .select().single();
     if (!error && data) setResumes(prev => [data, ...prev]);
   };
 
@@ -272,138 +294,165 @@ export default function Dashboard() {
   const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const filtered = resumes.filter(r => (r.title || "").toLowerCase().includes(search.toLowerCase()) || (r.content?.role || "").toLowerCase().includes(search.toLowerCase()));
-  const avgCompleteness = resumes.length > 0 ? Math.round(resumes.reduce((s, r) => s + completeness(r.content), 0) / resumes.length) : 0;
-  const uniqueRoles = new Set(resumes.map(r => r.content?.role).filter(Boolean)).size;
+  const avgCompleteness = resumes.length > 0
+    ? Math.round(resumes.reduce((s, r) => s + completeness(r.content), 0) / resumes.length)
+    : 0;
+  const filtered = resumes.filter(r =>
+    (r.title || "").toLowerCase().includes(search.toLowerCase()) ||
+    (r.content?.role || "").toLowerCase().includes(search.toLowerCase())
+  );
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 rounded-full border-4 border-orange-200 border-t-orange-600 animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading your workspace…</p>
+          <div className="h-10 w-10 rounded-full border-4 border-orange-100 border-t-orange-500 animate-spin" />
+          <p className="text-sm text-gray-500">Loading your workspace…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white from-orange-50 via-white to-amber-50">
+    <div className="min-h-screen bg-[#f8f8f8]">
 
       {/* ── TOPBAR ── */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
+      <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex h-14 items-center gap-4">
 
             {/* Logo */}
-            <button onClick={() => navigate("/")} className="flex items-center gap-2 text-sm font-bold text-orange-600 flex-shrink-0 hover:text-orange-700 transition-colors">
-              <Zap className="h-4 w-4" />
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 text-2xl font-bold text-orange-500 flex-shrink-0 hover:text-orange-600 transition-colors mr-2"
+            >
+              
               AI Resume Builder
             </button>
 
             {/* Search — center */}
-            <div className="flex-1 max-w-sm relative hidden sm:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
+            <div className="flex-1 max-w-lg relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search resumes…"
-                className="w-full pl-9 pr-4 py-2 text-sm rounded-[var(--radius)] border border-[#fde3c8] bg-[#fff7ed] focus:bg-white focus:outline-none focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/20 transition-all"
+                placeholder="Search resumes..."
+                className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
               />
             </div>
 
             {/* Right */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="hidden sm:flex">
-                <Home className="h-4 w-4" />
-                Home
-              </Button>
-              <Button onClick={() => navigate("/resume/new")}>
+            <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
+              <button
+                onClick={() => {}}
+                className="text-sm text-gray-600 hover:text-gray-900 hidden sm:block transition-colors"
+              >
+                History
+              </button>
+              <button
+                onClick={() => navigate("/resume/new")}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
+              >
                 <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">New Resume</span>
-                <span className="sm:hidden">New</span>
-              </Button>
-              {/* Avatar */}
+                New Resume
+              </button>
               <button
                 onClick={handleSignOut}
                 title={`Sign out (${user?.email})`}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-red-500 text-white text-sm font-bold shadow-sm hover:opacity-90 transition-opacity flex-shrink-0"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-colors flex-shrink-0"
               >
-                {initials || <User2 className="h-4 w-4" />}
+                {initials}
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
 
         {/* ── PAGE HEADER ── */}
         <div className="mb-8">
-          <p className="text-sm text-orange-600 font-semibold mb-1">Dashboard</p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            {greeting}, {firstName} 
+          <h1 className="text-2xl font-bold text-gray-900">
+            {greeting}, {firstName}
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <p className="text-gray-500 mt-1 text-sm">
             {resumes.length === 0
               ? "Ready to build your first resume?"
-              : `You have ${resumes.length} resume${resumes.length !== 1 ? "s" : ""}${avgCompleteness > 0 ? ` · avg. ${avgCompleteness}% complete` : ""}`}
+              : `You have ${resumes.length} resume${resumes.length !== 1 ? "s" : ""}. Keep building your career!`}
           </p>
         </div>
 
         {/* ── STATS ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-          <StatCard icon={FileText}   label="Total Resumes"   value={resumes.length}  accent="orange" />
-          <StatCard icon={Briefcase}  label="Roles Targeted"  value={uniqueRoles}     accent="blue"   />
-          <StatCard icon={TrendingUp} label="Avg Completeness" value={`${avgCompleteness}%`} accent="green" />
-          <StatCard icon={Sparkles}   label="AI-Enhanced"     value={resumes.length}  accent="purple" />
-        </div>
+        {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <StatCard
+            label="Total Resumes"
+            value={resumes.length}
+            Icon={FileText}
+            iconBg="bg-blue-50"
+            iconColor="text-blue-500"
+          />
+          <StatCard
+            label="Jobs Applied"
+            value={0}
+            Icon={Briefcase}
+            iconBg="bg-green-50"
+            iconColor="text-green-500"
+          />
+          <StatCard
+            label="Success Rate"
+            value={`${avgCompleteness}%`}
+            Icon={TrendingUp}
+            iconBg="bg-purple-50"
+            iconColor="text-purple-500"
+          />
+          <StatCard
+            label="AI Requests"
+            value={resumes.length}
+            Icon={BarChart2}
+            iconBg="bg-orange-50"
+            iconColor="text-orange-500"
+          />
+        </div> */}
 
-        {/* ── MAIN LAYOUT ── */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        {/* ── MY RESUMES ── */}
+        <div>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-base font-semibold text-lg text-gray-900">My Resumes</h2>
+            <button className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 bg-white hover:border-gray-300 transition-colors">
+              All Resumes
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
 
-          {/* ── RESUMES LIST (2 cols) ── */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-                <LayoutDashboard className="h-4 w-4 text-orange-500" />
-                My Resumes
-                {filtered.length > 0 && (
-                  <span className="text-xs font-normal text-muted-foreground">({filtered.length})</span>
-                )}
-              </h2>
-              {resumes.length > 0 && (
-                <Button variant="link" size="sm" onClick={() => navigate("/resume/new")} className="h-auto p-0 text-xs">
-                  <Plus className="h-3.5 w-3.5" /> Add new
-                </Button>
+          {/* Empty state */}
+          {filtered.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border-2 border-dashed border-gray-200 bg-white">
+              <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mb-4">
+                <FileText className="h-8 w-8 text-orange-400" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-1">
+                {search ? `No results for "${search}"` : "No resumes yet"}
+              </h3>
+              <p className="text-sm text-gray-500 mb-5 max-w-xs">
+                {search
+                  ? "Try a different search term."
+                  : "Create your first AI-powered resume in minutes and start landing more interviews."}
+              </p>
+              {!search && (
+                <button
+                  onClick={() => navigate("/resume/new")}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Create Your First Resume
+                </button>
               )}
             </div>
+          )}
 
-            {/* Mobile search */}
-            <div className="sm:hidden mb-3 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 pointer-events-none" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search resumes…"
-                className="w-full pl-9 pr-4 py-2 text-sm rounded-[var(--radius)] border border-[#fde3c8] bg-white focus:outline-none focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/20 transition-all"
-              />
-            </div>
-
-            {filtered.length === 0 && search && (
-              <div className="py-12 text-center rounded-2xl border border-dashed border-orange-200 bg-white">
-                <p className="text-sm text-muted-foreground">No results for "<strong>{search}</strong>"</p>
-                <Button variant="link" size="sm" onClick={() => setSearch("")} className="mt-2 h-auto p-0 text-xs">Clear search</Button>
-              </div>
-            )}
-
-            {filtered.length === 0 && !search && (
-              <div className="rounded-2xl border border-dashed border-orange-200 bg-white/80">
-                <EmptyState onCreate={() => navigate("/resume/new")} />
-              </div>
-            )}
-
-            <div className="grid gap-3 sm:grid-cols-2">
+          {/* 2-column cards */}
+          {filtered.length > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2">
               {filtered.map(resume => (
                 <ResumeCard
                   key={resume.id}
@@ -414,87 +463,7 @@ export default function Dashboard() {
                 />
               ))}
             </div>
-
-            {resumes.length > 0 && (
-              <Button variant="outline" onClick={() => navigate("/resume/new")} className="mt-4 w-full border-dashed">
-                <Plus className="h-4 w-4" /> Create another resume
-              </Button>
-            )}
-          </div>
-
-          {/* ── SIDEBAR ── */}
-          <div className="space-y-4">
-
-            {/* Profile card */}
-            <div className="rounded-lg bg-gradient-to-br from-orange-500 to-red-500 p-5 text-white shadow-md">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-11 w-11 rounded-full bg-white/20 flex items-center justify-center text-lg font-bold flex-shrink-0">
-                  {initials || <User2 className="h-5 w-5" />}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-bold truncate">{displayName}</p>
-                  <p className="text-xs text-white/70 truncate">{user?.email}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                <div className="bg-white/15 rounded-md p-3 text-center">
-                  <p className="text-xl font-bold">{resumes.length}</p>
-                  <p className="text-xs text-white/70">Resumes</p>
-                </div>
-                <div className="bg-white/15 rounded-md p-3 text-center">
-                  <p className="text-xl font-bold">{avgCompleteness}%</p>
-                  <p className="text-xs text-white/70">Avg Score</p>
-                </div>
-              </div>
-              <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 py-2 rounded-md bg-white/15 hover:bg-white/25 text-sm font-semibold transition-colors">
-                <LogOut className="h-4 w-4" /> Sign Out
-              </button>
-            </div>
-
-            {/* Quick actions */}
-            <div className="rounded-lg bg-white border border-[#fde3c8] p-4 space-y-2">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Quick Actions</p>
-              {[
-                { icon: Plus,      label: "New Resume",       action: () => navigate("/resume/new"), variant: "default" },
-                { icon: FileText,  label: "Browse Templates", action: () => navigate("/resume/new"), variant: "secondary" },
-              ].map(({ icon: Icon, label, action, variant }) => (
-                <Button key={label} onClick={action} variant={variant} className="w-full justify-start">
-                  <Icon className="h-4 w-4" /> {label}
-                </Button>
-              ))}
-            </div>
-
-            {/* Resume checklist tip */}
-            <div className="rounded-lg bg-white border border-[#fde3c8] p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="h-4 w-4 text-orange-500" />
-                <p className="text-xs font-bold text-foreground uppercase tracking-wider">Resume Checklist</p>
-              </div>
-              <div className="space-y-2">
-                {[
-                  { icon: User2,          label: "Personal info",      done: resumes.some(r => r.content?.firstName) },
-                  { icon: Briefcase,      label: "Work experience",    done: resumes.some(r => (r.content?.experience || []).length > 0) },
-                  { icon: GraduationCap,  label: "Education",          done: resumes.some(r => (r.content?.education || []).length > 0) },
-                  { icon: Code2,          label: "Skills added",       done: resumes.some(r => (r.content?.skills || []).length >= 3) },
-                  { icon: Award,          label: "Summary written",    done: resumes.some(r => r.content?.summary) },
-                ].map(({ icon: Icon, label, done }) => (
-                  <div key={label} className="flex items-center gap-2.5">
-                    <div className={`h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0 ${done ? "bg-amber-100" : "bg-orange-50"}`}>
-                      <Icon className={`h-3 w-3 ${done ? "text-amber-700" : "text-orange-300"}`} />
-                    </div>
-                    <span className={`text-xs ${done ? "text-foreground font-medium" : "text-muted-foreground"}`}>{label}</span>
-                    {done && <span className="ml-auto text-[10px] text-amber-700 font-semibold">✓</span>}
-                  </div>
-                ))}
-              </div>
-              {resumes.length > 0 && (
-                <Button variant="link" size="sm" onClick={() => navigate("/resume/new")} className="mt-4 w-full h-auto p-0 text-xs justify-center">
-                  Improve a resume <ChevronRight className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-
-          </div>
+          )}
         </div>
       </div>
     </div>

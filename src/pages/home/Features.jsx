@@ -17,11 +17,11 @@ const features = [
     title: "AI-Powered Content Generation",
     description: "Our advanced AI analyzes your experience and creates compelling bullet points, summaries, and descriptions that highlight your achievements."
   },
-  {
-    icon: Target,
-    title: "ATS Optimization",
-    description: "Automatically optimize your resume for Applicant Tracking Systems with keyword analysis and formatting that gets past the bots."
-  },
+  // {
+  //   icon: Target,
+  //   title: "ATS Optimization",
+  //   description: "Automatically optimize your resume for Applicant Tracking Systems with keyword analysis and formatting that gets past the bots."
+  // },
   {
     icon: Zap,
     title: "Instant Resume Creation",
@@ -46,17 +46,17 @@ const features = [
     icon: Sparkles,
     title: "Smart Suggestions",
     description: "Get real-time suggestions for improving your resume based on industry best practices and current job market trends."
-  },
-  {
-    icon: Users,
-    title: "Industry Expertise",
-    description: "Tailored advice and formatting for over 100+ industries and job roles, from entry-level to executive positions."
-  },
-  {
-    icon: TrendingUp,
-    title: "Performance Analytics",
-    description: "Track how your resume performs with detailed analytics on views, downloads, and application success rates."
   }
+  // {
+  //   icon: Users,
+  //   title: "Industry Expertise",
+  //   description: "Tailored advice and formatting for over 100+ industries and job roles, from entry-level to executive positions."
+  // },
+  // {
+  //   icon: TrendingUp,
+  //   title: "Performance Analytics",
+  //   description: "Track how your resume performs with detailed analytics on views, downloads, and application success rates."
+  // }
 ];
 
 export default function Features() {
