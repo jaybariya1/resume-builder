@@ -21,6 +21,7 @@ const Template2 = ({ data, accentColor = "#f97316" }) => {
     fontFamily,
     fontSize,
     sectionTitles = {},
+    profilePhoto = "",
   } = data;
 
   return (
@@ -34,6 +35,24 @@ const Template2 = ({ data, accentColor = "#f97316" }) => {
         className="w-[240px] min-h-full flex-shrink-0 text-white p-7 flex flex-col gap-6"
         style={{ backgroundColor: "#1e293b" }}
       >
+        {/* Profile Photo */}
+        {profilePhoto && (
+          <div className="flex justify-center">
+            <img
+              src={profilePhoto}
+              alt="Profile"
+              style={{
+                width: "96px",
+                height: "96px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: `3px solid ${accentColor}`,
+                display: "block",
+              }}
+            />
+          </div>
+        )}
+
         {/* Name + Role */}
         <div>
           <h1 className="text-[1.8333em] font-bold leading-tight text-white">

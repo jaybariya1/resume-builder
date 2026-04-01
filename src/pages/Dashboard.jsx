@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import ResumePreview from "../components/resume/ResumePreview.jsx";
 import {
   Plus, FileText, Edit3, Trash2, Copy, Search,
   Sparkles, Briefcase, TrendingUp, BarChart2,
   Download, ChevronDown,
 } from "lucide-react";
+import { template } from "lodash";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -29,74 +31,74 @@ function completeness(content = {}) {
 
 // ─── Mini Resume Preview Thumbnail ───────────────────────────────────────────
 
-function ResumePreviewThumb({ content = {} }) {
-  const name = [content.firstName, content.lastName].filter(Boolean).join(" ") || "Your Name";
-  const role = content.role || "";
-  const hasExp = (content.experience || []).some(e => e.title);
-  const hasEdu = (content.education || []).some(e => e.degree || e.school);
-  const hasSummary = !!content.summary;
+// function ResumePreviewThumb({ content = {} }) {
+//   const name = [content.firstName, content.lastName].filter(Boolean).join(" ") || "Your Name";
+//   const role = content.role || "";
+//   const hasExp = (content.experience || []).some(e => e.title);
+//   const hasEdu = (content.education || []).some(e => e.degree || e.school);
+//   const hasSummary = !!content.summary;
 
-  return (
-    <div
-      className="w-full h-full bg-white overflow-hidden select-none"
-      style={{ fontFamily: "Georgia, serif", fontSize: "3.5px", lineHeight: 1.4, color: "#222", padding: "10px 10px" }}
-    >
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "4px", paddingBottom: "3px", borderBottom: "0.5px solid #ccc" }}>
-        <div style={{ fontSize: "6px", fontWeight: 700, letterSpacing: "0.3px" }}>{name}</div>
-        {role && <div style={{ fontSize: "3.5px", color: "#555", marginTop: "1px" }}>{role}</div>}
-        <div style={{ fontSize: "2.8px", color: "#888", marginTop: "0.5px" }}>
-          {[content.email, content.phone, content.location].filter(Boolean).join("  ·  ")}
-        </div>
-      </div>
+//   return (
+//     <div
+//       className="w-full h-full bg-white overflow-hidden select-none"
+//       style={{ fontFamily: "Georgia, serif", fontSize: "3.5px", lineHeight: 1.4, color: "#222", padding: "10px 10px" }}
+//     >
+//       {/* Header */}
+//       <div style={{ textAlign: "center", marginBottom: "4px", paddingBottom: "3px", borderBottom: "0.5px solid #ccc" }}>
+//         <div style={{ fontSize: "6px", fontWeight: 700, letterSpacing: "0.3px" }}>{name}</div>
+//         {role && <div style={{ fontSize: "3.5px", color: "#555", marginTop: "1px" }}>{role}</div>}
+//         <div style={{ fontSize: "2.8px", color: "#888", marginTop: "0.5px" }}>
+//           {[content.email, content.phone, content.location].filter(Boolean).join("  ·  ")}
+//         </div>
+//       </div>
 
-      {hasSummary && (
-        <div style={{ marginBottom: "3px" }}>
-          <div style={{ fontSize: "3px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "0.3px solid #bbb", marginBottom: "1.5px", paddingBottom: "0.5px" }}>Profile</div>
-          <div style={{ fontSize: "2.8px", color: "#444", lineHeight: 1.5 }}>
-            {(content.summary || "").replace(/<[^>]*>/g, "").slice(0, 140)}
-          </div>
-        </div>
-      )}
+//       {hasSummary && (
+//         <div style={{ marginBottom: "3px" }}>
+//           <div style={{ fontSize: "3px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "0.3px solid #bbb", marginBottom: "1.5px", paddingBottom: "0.5px" }}>Profile</div>
+//           <div style={{ fontSize: "2.8px", color: "#444", lineHeight: 1.5 }}>
+//             {(content.summary || "").replace(/<[^>]*>/g, "").slice(0, 140)}
+//           </div>
+//         </div>
+//       )}
 
-      {hasExp && (
-        <div style={{ marginBottom: "3px" }}>
-          <div style={{ fontSize: "3px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "0.3px solid #bbb", marginBottom: "1.5px", paddingBottom: "0.5px" }}>Experience</div>
-          {(content.experience || []).slice(0, 2).map((exp, i) => (
-            <div key={i} style={{ marginBottom: "1.5px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: "3.2px", fontWeight: 600 }}>{exp.title}</span>
-                <span style={{ fontSize: "2.5px", color: "#888" }}>{exp.startDate} – {exp.endDate || "Present"}</span>
-              </div>
-              <div style={{ fontSize: "2.8px", color: "#555", marginTop: "0.3px" }}>{exp.company}</div>
-            </div>
-          ))}
-        </div>
-      )}
+//       {hasExp && (
+//         <div style={{ marginBottom: "3px" }}>
+//           <div style={{ fontSize: "3px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "0.3px solid #bbb", marginBottom: "1.5px", paddingBottom: "0.5px" }}>Experience</div>
+//           {(content.experience || []).slice(0, 2).map((exp, i) => (
+//             <div key={i} style={{ marginBottom: "1.5px" }}>
+//               <div style={{ display: "flex", justifyContent: "space-between" }}>
+//                 <span style={{ fontSize: "3.2px", fontWeight: 600 }}>{exp.title}</span>
+//                 <span style={{ fontSize: "2.5px", color: "#888" }}>{exp.startDate} – {exp.endDate || "Present"}</span>
+//               </div>
+//               <div style={{ fontSize: "2.8px", color: "#555", marginTop: "0.3px" }}>{exp.company}</div>
+//             </div>
+//           ))}
+//         </div>
+//       )}
 
-      {hasEdu && (
-        <div style={{ marginBottom: "3px" }}>
-          <div style={{ fontSize: "3px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "0.3px solid #bbb", marginBottom: "1.5px", paddingBottom: "0.5px" }}>Education</div>
-          {(content.education || []).slice(0, 1).map((edu, i) => (
-            <div key={i}>
-              <span style={{ fontSize: "3.2px", fontWeight: 600 }}>{edu.degree}</span>
-              <div style={{ fontSize: "2.8px", color: "#555" }}>{edu.school}</div>
-            </div>
-          ))}
-        </div>
-      )}
+//       {hasEdu && (
+//         <div style={{ marginBottom: "3px" }}>
+//           <div style={{ fontSize: "3px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "0.3px solid #bbb", marginBottom: "1.5px", paddingBottom: "0.5px" }}>Education</div>
+//           {(content.education || []).slice(0, 1).map((edu, i) => (
+//             <div key={i}>
+//               <span style={{ fontSize: "3.2px", fontWeight: 600 }}>{edu.degree}</span>
+//               <div style={{ fontSize: "2.8px", color: "#555" }}>{edu.school}</div>
+//             </div>
+//           ))}
+//         </div>
+//       )}
 
-      {/* Skeleton placeholder lines when no content */}
-      {!hasSummary && !hasExp && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "2.5px" }}>
-          {[80, 65, 90, 55, 72, 88, 60].map((w, i) => (
-            <div key={i} style={{ height: "2px", width: `${w}%`, background: "#e5e7eb", borderRadius: "1px" }} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+//       {/* Skeleton placeholder lines when no content */}
+//       {!hasSummary && !hasExp && (
+//         <div style={{ display: "flex", flexDirection: "column", gap: "2.5px" }}>
+//           {[80, 65, 90, 55, 72, 88, 60].map((w, i) => (
+//             <div key={i} style={{ height: "2px", width: `${w}%`, background: "#e5e7eb", borderRadius: "1px" }} />
+//           ))}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
 
 // ─── Resume Card ──────────────────────────────────────────────────────────────
 
@@ -134,7 +136,12 @@ function ResumeCard({ resume, onEdit, onDelete, onDuplicate }) {
         onClick={() => onEdit(resume.id)}
         title="Open resume"
       >
-        <ResumePreviewThumb content={content} />
+        <ResumePreview
+          data={content}
+          selectedId={content.templateId}
+          accentColor={content.accent}
+          scale={200 / 794}
+        />
       </div>
 
       {/* Right — Info + actions */}

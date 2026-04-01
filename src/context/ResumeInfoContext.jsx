@@ -28,6 +28,8 @@ export const ResumeInfoProvider = ({ children }) => {
     linkedin: "",
     github: "",
     portfolio: "",
+    templateId:"",
+    accent:"",
     website: "",
     experience: [],
     education: [],
@@ -106,6 +108,7 @@ const saveResume = async (mode, resumeId, currentData) => {
     user_id: user.id,
     title: currentData.title || "Untitled Resume",
     content: currentData,
+    profile_photo: currentData.profilePhoto || null,
     updated_at: new Date().toISOString(),
   };
 

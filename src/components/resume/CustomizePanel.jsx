@@ -5,6 +5,10 @@ import Template2 from "./templates/Template2/Template2";
 import Template3 from "./templates/Template3/Template3";
 import Template4 from "./templates/Template4/Template4";
 import Template5 from "./templates/Template5/Template5";
+import Template6 from "./templates/Template6/Template6";
+import Template7 from "./templates/Template7/Template7";
+import Template8 from "./templates/Template8/Template8";
+import Template9 from "./templates/Template9/Template9";
 import { ResumeInfoContext } from "../../context/ResumeInfoContext";
 
 // ─── Sample data ──────────────────────────────────────────────────────────────
@@ -38,6 +42,10 @@ const TEMPLATES = [
   { id: "elegant",     name: "Elegant",     Component: Template3, defaultAccent: "#7c3aed", tags: [],              supportsColor: true  },
   { id: "minimal",     name: "Fresh",       Component: Template4, defaultAccent: "#16a34a", tags: ["ATS"],         supportsColor: true  },
   { id: "traditional", name: "Traditional", Component: Template5, defaultAccent: "#000000", tags: [],              supportsColor: false },
+  { id: 'impact',      name: 'Impact',      Component: Template6, defaultAccent: '#d4a017', tags: [],              supportsPhoto: false },
+  { id: 'timeline',    name: 'Timeline',    Component: Template7, defaultAccent: '#22c55e', tags: [],              supportsPhoto: false },
+  { id: 'helsinki',    name: 'Helsinki',    Component: Template8, defaultAccent: '#1a1a1a', tags: [],              supportsPhoto: true  },
+  { id: 'academic',    name: 'Academic',    Component: Template9, defaultAccent: '#000000', tags: [],              supportsPhoto: false },
 ];
 
 const FILTER_TAGS = ["All", "Two column", "ATS"];
@@ -142,6 +150,7 @@ export default function CustomizePanel({ selectedId, onSelectTemplate, accentCol
   const effectiveAccent = accentColor || currentTemplate?.defaultAccent;
 
   const handleSelectTemplate = (id) => {
+    setResumeData(prev => ({ ...prev, templateId: id}));
     onSelectTemplate(id);
     const tpl = TEMPLATES.find(t => t.id === id);
     if (!tpl?.supportsColor) {
@@ -149,6 +158,7 @@ export default function CustomizePanel({ selectedId, onSelectTemplate, accentCol
       onAccentChange(null);
     } else {
       // Apply the template's default accent color immediately
+      setResumeData(prev => ({ ...prev, accent: tpl.defaultAccent}));
       onAccentChange(tpl.defaultAccent);
     }
   };

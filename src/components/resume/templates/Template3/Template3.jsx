@@ -21,6 +21,7 @@ const Template3 = ({ data, accentColor = "#7c3aed" }) => {
     fontFamily,
     fontSize,
     sectionTitles = {},
+    profilePhoto = "",
   } = data;
 
   const SectionTitle = ({ children }) => (
@@ -46,22 +47,40 @@ const Template3 = ({ data, accentColor = "#7c3aed" }) => {
 
       {/* HEADER */}
       <header className="mb-2">
-        <h1
-          className="text-[2.6667em] font-bold leading-tight"
-          style={{ color: "#1e1b4b", letterSpacing: "-0.5px" }}
-        >
-          {firstName} {lastName}
-        </h1>
-        {role && (
-          <p className="text-[1.1667em] mt-1  italic font-bold" style={{ color: accentColor }}>
-            {role}
-          </p>
-        )}
-        {contactItems.length > 0 && (
-          <p className="mt-2 text-[0.9167em] text-gray-500">
-            {contactItems.join("  ·  ")}
-          </p>
-        )}
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex-1">
+            <h1
+              className="text-[2.6667em] font-bold leading-tight"
+              style={{ color: "#1e1b4b", letterSpacing: "-0.5px" }}
+            >
+              {firstName} {lastName}
+            </h1>
+            {role && (
+              <p className="text-[1.1667em] mt-1  italic font-bold" style={{ color: accentColor }}>
+                {role}
+              </p>
+            )}
+            {contactItems.length > 0 && (
+              <p className="mt-2 text-[0.9167em] text-gray-500">
+                {contactItems.join("  ·  ")}
+              </p>
+            )}
+          </div>
+          {profilePhoto && (
+            <img
+              src={profilePhoto}
+              alt="Profile"
+              style={{
+                width: "90px",
+                height: "90px",
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: `3px solid ${accentColor}`,
+                flexShrink: 0,
+              }}
+            />
+          )}
+        </div>
       </header>
 
       {/* SUMMARY */}
